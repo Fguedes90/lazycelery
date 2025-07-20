@@ -144,10 +144,6 @@ run = [
     "echo 'Development environment ready!'"
 ]
 
-[tasks.bench]
-description = "Run benchmarks"
-run = "cargo bench"
-
 [tasks.all]
 description = "Run all checks (lint, test, audit)"
 depends = ["lint", "test", "audit"]

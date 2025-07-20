@@ -173,10 +173,10 @@ mod integration_tests {
         };
 
         populate_test_data(&client).await?;
-        
+
         // Add small delay to ensure data is persisted in CI environment
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        
+
         // Debug: Verify test data was actually set
         let mut conn = client.get_multiplexed_tokio_connection().await?;
         let keys: Vec<String> = conn.keys("celery-task-meta-*").await?;
@@ -195,7 +195,11 @@ mod integration_tests {
         }
 
         // Should parse our test tasks (real implementation)
-        assert!(tasks.len() >= 2, "Should find at least 2 tasks, found {}", tasks.len());
+        assert!(
+            tasks.len() >= 2,
+            "Should find at least 2 tasks, found {}",
+            tasks.len()
+        );
 
         // Find the successful task (real Celery metadata doesn't have task name)
         let success_task = tasks.iter().find(|t| t.id == "test-task-1").unwrap();

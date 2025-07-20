@@ -1,6 +1,10 @@
 name: Release
 
 on:
+  # Automatic release on push to main branch
+  push:
+    branches: [ main ]
+  # Manual release with version selection
   workflow_dispatch:
     inputs:
       version_type:
@@ -12,6 +16,7 @@ on:
         - patch
         - minor
         - major
+  # Tag-based release (for manual tags)
   push:
     tags:
       - 'v*'
@@ -20,6 +25,132 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Determine if we should release and what type
+  check-release:
+    name: Check Release Needed
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version_type: ${{ steps.check.outputs.version_type }}
+      skip_ci: ${{ steps.check.outputs.skip_ci }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Check if release needed
+      id: check
+      run: |
+        # Get the last commit message
+        LAST_COMMIT=$(git log -1 --pretty=format:"%s")
+        echo "Last commit: $LAST_COMMIT"
+        
+        # Skip if this is a release commit to avoid infinite loop
+        if [[ "$LAST_COMMIT" == *"chore(release):"* ]] || [[ "$LAST_COMMIT" == *"[skip ci]"* ]]; then
+          echo "skip_ci=true" >> $GITHUB_OUTPUT
+          echo "should_release=false" >> $GITHUB_OUTPUT
+          echo "🔄 Skipping release - this is a release commit or has [skip ci]"
+          exit 0
+        fi
+        
+        # Check if we have any commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          COMMITS_SINCE_TAG=$(git rev-list $LAST_TAG..HEAD --count)
+          echo "Commits since last tag ($LAST_TAG): $COMMITS_SINCE_TAG"
+          
+          if [ "$COMMITS_SINCE_TAG" -eq 0 ]; then
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "🚫 No new commits since last release"
+            exit 0
+          fi
+          
+          # Get commits since last tag for analysis
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+        else
+          echo "No previous tags found, this will be the first release"
+          COMMITS=$(git log --pretty=format:"%s")
+          COMMITS_SINCE_TAG=999
+        fi
+        
+        echo "should_release=true" >> $GITHUB_OUTPUT
+        
+        # Determine version bump type based on conventional commits
+        if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?!:|^.+!:|BREAKING CHANGE|^[a-z]+(\(.+\))?!:"; then
+          echo "version_type=major" >> $GITHUB_OUTPUT
+          echo "🔥 Major release detected (breaking changes)"
+        elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+          echo "version_type=minor" >> $GITHUB_OUTPUT
+          echo "✨ Minor release detected (new features)"
+        else
+          echo "version_type=patch" >> $GITHUB_OUTPUT
+          echo "🔧 Patch release detected (bug fixes/improvements)"
+        fi
+  # Automatic release preparation
+  auto-prepare-release:
+    name: Auto Prepare Release
+    runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true' && !needs.check-release.outputs.skip_ci
+    outputs:
+      new_version: ${{ steps.version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Configure git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install dependencies
+      run: |
+        rustup component add rustfmt clippy
+        cargo install cargo-edit
+        mise install git-cliff
+    
+    - name: Bump version automatically
+      run: |
+        echo "Auto-bumping version (${{ needs.check-release.outputs.version_type }})"
+        cargo set-version --bump ${{ needs.check-release.outputs.version_type }}
+        NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "🚀 New version: $NEW_VERSION"
+      id: version
+    
+    - name: Update version in UI
+      run: |
+        sed -i "s/LazyCelery v[0-9]\+\.[0-9]\+\.[0-9]\+/LazyCelery v$NEW_VERSION/g" src/ui/mod.rs
+    
+    - name: Generate changelog
+      run: |
+        git-cliff --tag "v$NEW_VERSION" -o CHANGELOG.md
+    
+    - name: Run tests before release
+      run: mise run test
+    
+    - name: Commit and tag automatically
+      run: |
+        git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs
+        git commit -m "chore(release): prepare for v$NEW_VERSION [skip ci]"
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin main
+        git push origin "v$NEW_VERSION"
+        echo "✅ Automatically created release v$NEW_VERSION"
+
+  # Manual release preparation (kept for manual workflow_dispatch)
   prepare-release:
     name: Prepare Release
     runs-on: ubuntu-latest

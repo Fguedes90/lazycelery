@@ -152,8 +152,12 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Security audit (using locked deps)
+    - name: Install and run security audit
       run: |
+        # Install cargo-audit if not cached
+        cargo install cargo-audit --locked
+        
+        # Run security audit
         if ! cargo audit --locked; then
           echo "❌ Security audit failed"
           exit 1

@@ -51,10 +51,19 @@ pub fn handle_key_event(key: KeyEvent, app: &mut crate::app::App) {
         return;
     }
 
+    if app.show_task_details {
+        app.hide_task_details();
+        return;
+    }
+
     // Clear status message on any key press (except actions that set new status)
     match key.code {
-        KeyCode::Char('p') | KeyCode::Char('r') | KeyCode::Char('x') => {
-            // These will set their own status messages
+        KeyCode::Char('p')
+        | KeyCode::Char('r')
+        | KeyCode::Char('x')
+        | KeyCode::Enter
+        | KeyCode::Char('d') => {
+            // These will set their own status messages or open modals
         }
         _ => {
             app.clear_status_message();
@@ -72,6 +81,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut crate::app::App) {
         KeyCode::Char('p') => app.initiate_purge_queue(),
         KeyCode::Char('r') => app.initiate_retry_task(),
         KeyCode::Char('x') => app.initiate_revoke_task(),
+        KeyCode::Enter | KeyCode::Char('d') => app.show_task_details(),
         _ => {}
     }
 }

@@ -44,6 +44,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.show_confirmation {
         draw_confirmation_dialog(f, app);
     }
+
+    // Draw task details modal if active
+    if app.show_task_details {
+        draw_task_details_modal(f, app);
+    }
 }
 
 fn draw_header(f: &mut Frame, app: &App, area: Rect) {
@@ -99,12 +104,14 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     // Right side - key hints
     let key_hints = if app.show_confirmation {
         "[y/Enter] Confirm | [n/Esc] Cancel"
+    } else if app.show_task_details {
+        "[Any key] Close details"
     } else if app.is_searching {
         "[Enter] Confirm | [Esc] Cancel"
     } else {
         match app.selected_tab {
             Tab::Queues => "[Tab] Switch | [↑↓] Navigate | [p] Purge | [/] Search | [?] Help | [q] Quit",
-            Tab::Tasks => "[Tab] Switch | [↑↓] Navigate | [r] Retry | [x] Revoke | [/] Search | [?] Help | [q] Quit",
+            Tab::Tasks => "[Tab] Switch | [↑↓] Navigate | [Enter/d] Details | [r] Retry | [x] Revoke | [/] Search | [?] Help | [q] Quit",
             _ => "[Tab] Switch | [↑↓] Navigate | [/] Search | [?] Help | [q] Quit",
         }
     };
@@ -128,7 +135,7 @@ fn draw_help(f: &mut Frame) {
         Line::from("  Tab       - Switch between tabs"),
         Line::from("  ↑/k       - Move up"),
         Line::from("  ↓/j       - Move down"),
-        Line::from("  Enter     - View details"),
+        Line::from("  Enter/d   - View details (in Tasks tab)"),
         Line::from("  Esc       - Go back"),
         Line::from(""),
         Line::from("Actions:"),
@@ -199,4 +206,156 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn draw_task_details_modal(f: &mut Frame, app: &App) {
+    use ratatui::widgets::{Clear, Paragraph, Wrap};
+
+    if let Some(task) = &app.selected_task_details {
+        let popup_area = centered_rect(80, 70, f.size());
+
+        // Clear background
+        f.render_widget(Clear, popup_area);
+
+        // Draw modal background
+        f.render_widget(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan))
+                .title(" Task Details ")
+                .style(Style::default().bg(Color::Black)),
+            popup_area,
+        );
+
+        let inner_area = Layout::default()
+            .margin(1)
+            .constraints([Constraint::Percentage(100)])
+            .split(popup_area)[0];
+
+        // Create task details content
+        let details_lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    "ID: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(&task.id),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Name: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(&task.name),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Status: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("{:?}", task.status),
+                    Style::default().fg(match task.status {
+                        crate::models::TaskStatus::Success => Color::Green,
+                        crate::models::TaskStatus::Failure => Color::Red,
+                        crate::models::TaskStatus::Retry => Color::Yellow,
+                        crate::models::TaskStatus::Pending => Color::Blue,
+                        crate::models::TaskStatus::Revoked => Color::Magenta,
+                        _ => Color::White,
+                    }),
+                ),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Worker: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(task.worker.as_deref().unwrap_or("Unknown")),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Queue: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw("default"),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Timestamp: ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(task.timestamp.to_string()),
+            ]),
+            Line::from(""),
+            Line::from(vec![Span::styled(
+                "Arguments: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )]),
+            Line::from(task.args.as_str()),
+            Line::from(""),
+            Line::from(vec![Span::styled(
+                "Keyword Arguments: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )]),
+            Line::from(task.kwargs.as_str()),
+            Line::from(""),
+            Line::from(vec![Span::styled(
+                "Result: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )]),
+            Line::from(task.result.as_deref().unwrap_or("None")),
+        ];
+
+        // Add traceback if available and task failed
+        let mut all_lines = details_lines;
+        if task.status == crate::models::TaskStatus::Failure {
+            if let Some(traceback) = &task.traceback {
+                all_lines.push(Line::from(""));
+                all_lines.push(Line::from(vec![Span::styled(
+                    "Traceback: ",
+                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                )]));
+                // Split traceback into lines and add them
+                for line in traceback.lines() {
+                    all_lines.push(Line::from(Span::styled(
+                        line,
+                        Style::default().fg(Color::Red),
+                    )));
+                }
+            }
+        }
+
+        // Add footer
+        all_lines.push(Line::from(""));
+        all_lines.push(Line::from(vec![Span::styled(
+            "Press any key to close",
+            Style::default()
+                .fg(Color::Gray)
+                .add_modifier(Modifier::ITALIC),
+        )]));
+
+        let paragraph = Paragraph::new(all_lines)
+            .wrap(Wrap { trim: true })
+            .scroll((0, 0));
+
+        f.render_widget(paragraph, inner_area);
+    }
 }

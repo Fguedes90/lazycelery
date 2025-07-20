@@ -27,6 +27,8 @@ pub struct App {
     pub confirmation_message: String,
     pub pending_action: Option<PendingAction>,
     pub status_message: String,
+    pub show_task_details: bool,
+    pub selected_task_details: Option<Task>,
     broker: Arc<Mutex<Box<dyn Broker>>>,
 }
 
@@ -55,6 +57,8 @@ impl App {
             confirmation_message: String::new(),
             pending_action: None,
             status_message: String::new(),
+            show_task_details: false,
+            selected_task_details: None,
             broker: Arc::new(Mutex::new(broker)),
         }
     }
@@ -277,5 +281,21 @@ impl App {
                 self.show_confirmation_dialog(message, PendingAction::RevokeTask(task.id.clone()));
             }
         }
+    }
+
+    pub fn show_task_details(&mut self) {
+        if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
+            let filtered_tasks = self.get_filtered_tasks();
+            if self.selected_task < filtered_tasks.len() {
+                let task = filtered_tasks[self.selected_task];
+                self.selected_task_details = Some(task.clone());
+                self.show_task_details = true;
+            }
+        }
+    }
+
+    pub fn hide_task_details(&mut self) {
+        self.show_task_details = false;
+        self.selected_task_details = None;
     }
 }

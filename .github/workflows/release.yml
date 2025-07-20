@@ -1,6 +1,22 @@
 name: Release
 
 on:
+  # Automatic release on push to main branch
+  push:
+    branches: [ main ]
+  # Manual release with version selection
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+  # Tag-based release (for manual tags)
   push:
     tags:
       - 'v*'
@@ -9,13 +25,87 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
+  # Determine if we should release and what type
+  check-release:
+    name: Check Release Needed
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      should_release: ${{ steps.check.outputs.should_release }}
+      version_type: ${{ steps.check.outputs.version_type }}
+      skip_ci: ${{ steps.check.outputs.skip_ci }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Check if release needed
+      id: check
+      run: |
+        # Get the last commit message
+        LAST_COMMIT=$(git log -1 --pretty=format:"%s")
+        echo "Last commit: $LAST_COMMIT"
+        
+        # Skip if this is a release commit to avoid infinite loop
+        if [[ "$LAST_COMMIT" == *"chore(release):"* ]] || [[ "$LAST_COMMIT" == *"[skip ci]"* ]]; then
+          echo "skip_ci=true" >> $GITHUB_OUTPUT
+          echo "should_release=false" >> $GITHUB_OUTPUT
+          echo "🔄 Skipping release - this is a release commit or has [skip ci]"
+          exit 0
+        fi
+        
+        # Check if we have any commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          COMMITS_SINCE_TAG=$(git rev-list $LAST_TAG..HEAD --count)
+          echo "Commits since last tag ($LAST_TAG): $COMMITS_SINCE_TAG"
+          
+          if [ "$COMMITS_SINCE_TAG" -eq 0 ]; then
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "🚫 No new commits since last release"
+            exit 0
+          fi
+          
+          # Get commits since last tag for analysis
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+        else
+          echo "No previous tags found, this will be the first release"
+          COMMITS=$(git log --pretty=format:"%s")
+          COMMITS_SINCE_TAG=999
+        fi
+        
+        echo "should_release=true" >> $GITHUB_OUTPUT
+        
+        # Determine version bump type based on conventional commits
+        if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?!:|^.+!:|BREAKING CHANGE|^[a-z]+(\(.+\))?!:"; then
+          echo "version_type=major" >> $GITHUB_OUTPUT
+          echo "🔥 Major release detected (breaking changes)"
+        elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+          echo "version_type=minor" >> $GITHUB_OUTPUT
+          echo "✨ Minor release detected (new features)"
+        else
+          echo "version_type=patch" >> $GITHUB_OUTPUT
+          echo "🔧 Patch release detected (bug fixes/improvements)"
+        fi
+  # Automatic release preparation
+  auto-prepare-release:
+    name: Auto Prepare Release
+    runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true' && !needs.check-release.outputs.skip_ci
+    outputs:
+      new_version: ${{ steps.version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Configure git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -24,26 +114,158 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Install dependencies
+      run: |
+        rustup component add rustfmt clippy
+        cargo install cargo-edit
+        mise install git-cliff
+    
+    - name: Bump version automatically
+      run: |
+        echo "Auto-bumping version (${{ needs.check-release.outputs.version_type }})"
+        cargo set-version --bump ${{ needs.check-release.outputs.version_type }}
+        NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "🚀 New version: $NEW_VERSION"
+      id: version
+    
+    - name: Update version in UI
+      run: |
+        sed -i "s/LazyCelery v[0-9]\+\.[0-9]\+\.[0-9]\+/LazyCelery v$NEW_VERSION/g" src/ui/mod.rs
+    
+    - name: Generate changelog
+      run: |
+        git-cliff --tag "v$NEW_VERSION" -o CHANGELOG.md
+    
+    - name: Run tests before release
+      run: mise run test
+    
+    - name: Commit and tag automatically
+      run: |
+        git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs
+        git commit -m "chore(release): prepare for v$NEW_VERSION [skip ci]"
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin main
+        git push origin "v$NEW_VERSION"
+        echo "✅ Automatically created release v$NEW_VERSION"
+
+  # Manual release preparation (kept for manual workflow_dispatch)
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      new_version: ${{ steps.version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Configure git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Install Rust components and dependencies
+      run: |
+        rustup component add rustfmt clippy
+        cargo install cargo-edit
+        mise install git-cliff
+    
+    - name: Bump version
+      run: |
+        echo "Bumping version (${{ github.event.inputs.version_type }})"
+        cargo set-version --bump ${{ github.event.inputs.version_type }}
+        NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      id: version
+    
+    - name: Update version in UI
+      run: |
+        sed -i "s/LazyCelery v[0-9]\+\.[0-9]\+\.[0-9]\+/LazyCelery v$NEW_VERSION/g" src/ui/mod.rs
+    
+    - name: Generate changelog
+      run: |
+        git-cliff --tag "v$NEW_VERSION" -o CHANGELOG.md
+    
     - name: Run tests
       run: mise run test
     
-    - name: Build release
-      run: mise run build
+    - name: Commit changes
+      run: |
+        git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs
+        git commit -m "chore(release): prepare for v$NEW_VERSION"
+    
+    - name: Create and push tag
+      run: |
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin main
+        git push origin "v$NEW_VERSION"
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install git-cliff
+      run: mise install git-cliff
+    
+    - name: Get version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        git-cliff --latest --strip header > release_notes.md
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Run tests before release
+      run: mise run test
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: LazyCelery v${{ steps.version.outputs.version }}
+        body: ${{ steps.release_notes.outputs.notes }}
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.version, '-') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
 
   build-binaries:
     name: Build Binaries
     needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -51,12 +273,19 @@ jobs:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
           name: lazycelery-linux-x86_64
+          archive: tar.gz
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           name: lazycelery-windows-x86_64.exe
+          archive: zip
         - os: macos-latest
           target: x86_64-apple-darwin
           name: lazycelery-macos-x86_64
+          archive: tar.gz
+        - os: macos-latest
+          target: aarch64-apple-darwin
+          name: lazycelery-macos-aarch64
+          archive: tar.gz
     
     steps:
     - uses: actions/checkout@v4
@@ -68,21 +297,391 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Add target
+      run: rustup target add ${{ matrix.target }}
+    
     - name: Build binary
       run: |
-        mise run build
+        cargo build --release --target ${{ matrix.target }} --locked
+        
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp target/release/lazycelery.exe ${{ matrix.name }}
+          cp target/${{ matrix.target }}/release/lazycelery.exe ${{ matrix.name }}
         else
-          cp target/release/lazycelery ${{ matrix.name }}
+          cp target/${{ matrix.target }}/release/lazycelery ${{ matrix.name }}
         fi
     
+    - name: Create archive (Unix)
+      if: matrix.archive == 'tar.gz'
+      run: |
+        tar -czf ${{ matrix.name }}.tar.gz ${{ matrix.name }}
+        echo "ASSET_PATH=${{ matrix.name }}.tar.gz" >> $GITHUB_ENV
+    
+    - name: Create archive (Windows)
+      if: matrix.archive == 'zip'
+      run: |
+        Compress-Archive -Path ${{ matrix.name }} -DestinationPath ${{ matrix.name }}.zip
+        echo "ASSET_PATH=${{ matrix.name }}.zip" >> $env:GITHUB_ENV
+    
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: ${{ env.ASSET_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crate:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
       with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./${{ matrix.name }}
-        asset_name: ${{ matrix.name }}
-        asset_content_type: application/octet-stream
+        shared-key: "publish-crate"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Publishing version: $VERSION"
+    
+    - name: Verify Cargo.toml version matches tag
+      run: |
+        TAG_VERSION="${{ steps.version.outputs.version }}"
+        CARGO_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "lazycelery") | .version')
+        echo "Tag version: $TAG_VERSION"
+        echo "Cargo.toml version: $CARGO_VERSION"
+        if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+          echo "❌ Version mismatch: tag=$TAG_VERSION, Cargo.toml=$CARGO_VERSION"
+          exit 1
+        fi
+        echo "✅ Version matches tag"
+    
+    - name: Run final quality checks before publish
+      run: |
+        echo "🔍 Running final checks before publishing..."
+        
+        # Format check
+        cargo fmt --all --check
+        
+        # Clippy check
+        cargo clippy --all-targets --all-features -- -D warnings
+        
+        # Test check
+        cargo test --lib --bins
+        
+        # Verify package can be built
+        cargo build --release --locked
+        
+        echo "✅ All checks passed"
+    
+    - name: Dry run publish (check package)
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        echo "🔍 Running dry-run publish to validate package..."
+        cargo publish --dry-run --locked
+        echo "✅ Dry-run successful"
+    
+    - name: Publish to crates.io
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        echo "📦 Publishing lazycelery v${{ steps.version.outputs.version }} to crates.io..."
+        cargo publish --locked
+        echo "✅ Successfully published to crates.io"
+        echo "🌐 Available at: https://crates.io/crates/lazycelery"
+
+  # Update package managers
+  update-package-managers:
+    name: Update Package Managers
+    runs-on: ubuntu-latest
+    needs: [create-release, publish-crate]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Get release version and assets
+      id: release
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Get release assets URLs and checksums
+        LINUX_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-linux-x86_64.tar.gz"
+        MACOS_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-macos-x86_64.tar.gz"
+        WINDOWS_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-windows-x86_64.zip"
+        SOURCE_URL="https://github.com/Fguedes90/lazycelery/archive/v$VERSION.tar.gz"
+        
+        echo "linux_url=$LINUX_URL" >> $GITHUB_OUTPUT
+        echo "macos_url=$MACOS_URL" >> $GITHUB_OUTPUT  
+        echo "windows_url=$WINDOWS_URL" >> $GITHUB_OUTPUT
+        echo "source_url=$SOURCE_URL" >> $GITHUB_OUTPUT
+    
+    - name: Calculate checksums
+      id: checksums
+      run: |
+        VERSION=${{ steps.release.outputs.version }}
+        
+        # Download and calculate checksums for all assets
+        curl -sL "${{ steps.release.outputs.linux_url }}" -o linux.tar.gz
+        curl -sL "${{ steps.release.outputs.macos_url }}" -o macos.tar.gz  
+        curl -sL "${{ steps.release.outputs.windows_url }}" -o windows.zip
+        curl -sL "${{ steps.release.outputs.source_url }}" -o source.tar.gz
+        
+        LINUX_SHA=$(sha256sum linux.tar.gz | cut -d' ' -f1)
+        MACOS_SHA=$(sha256sum macos.tar.gz | cut -d' ' -f1)
+        WINDOWS_SHA=$(sha256sum windows.zip | cut -d' ' -f1)
+        SOURCE_SHA=$(sha256sum source.tar.gz | cut -d' ' -f1)
+        
+        echo "linux_sha=$LINUX_SHA" >> $GITHUB_OUTPUT
+        echo "macos_sha=$MACOS_SHA" >> $GITHUB_OUTPUT
+        echo "windows_sha=$WINDOWS_SHA" >> $GITHUB_OUTPUT
+        echo "source_sha=$SOURCE_SHA" >> $GITHUB_OUTPUT
+        
+        echo "📋 Checksums calculated:"
+        echo "Linux: $LINUX_SHA"
+        echo "macOS: $MACOS_SHA" 
+        echo "Windows: $WINDOWS_SHA"
+        echo "Source: $SOURCE_SHA"
+
+  # Update Homebrew tap
+  update-homebrew:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    needs: update-package-managers
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
+        repository: Fguedes90/homebrew-tap
+        path: homebrew-tap
+    
+    - uses: actions/checkout@v4
+      with:
+        path: main-repo
+    
+    - name: Update Homebrew formula
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        SOURCE_URL="https://github.com/Fguedes90/lazycelery/archive/v$VERSION.tar.gz"
+        
+        # Calculate source checksum
+        curl -sL "$SOURCE_URL" | sha256sum | cut -d' ' -f1 > checksum.txt
+        SOURCE_SHA=$(cat checksum.txt)
+        
+        # Update formula
+        cd homebrew-tap
+        cp ../main-repo/packaging/homebrew/lazycelery.rb Formula/lazycelery.rb
+        
+        # Replace placeholders
+        sed -i "s/PLACEHOLDER_SHA256/$SOURCE_SHA/g" Formula/lazycelery.rb
+        sed -i "s/v0.2.0/v$VERSION/g" Formula/lazycelery.rb
+        sed -i "s/0.2.0/$VERSION/g" Formula/lazycelery.rb
+        
+        # Commit and push
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add Formula/lazycelery.rb
+        git commit -m "Update lazycelery to v$VERSION"
+        git push
+        
+        echo "✅ Homebrew formula updated to v$VERSION"
+
+  # Update AUR packages
+  update-aur:
+    name: Update AUR Packages
+    runs-on: ubuntu-latest
+    needs: update-package-managers
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: main-repo
+    
+    - name: Setup SSH for AUR
+      env:
+        AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+      run: |
+        if [ -n "$AUR_SSH_KEY" ]; then
+          mkdir -p ~/.ssh
+          echo "$AUR_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts
+          echo "✅ AUR SSH configured"
+        else
+          echo "⚠️  AUR_SSH_KEY not configured, skipping AUR updates"
+          exit 0
+        fi
+    
+    - name: Update AUR source package
+      run: |
+        if [ ! -f ~/.ssh/id_rsa ]; then exit 0; fi
+        
+        VERSION=${GITHUB_REF#refs/tags/v}
+        SOURCE_URL="https://github.com/Fguedes90/lazycelery/archive/v$VERSION.tar.gz"
+        
+        # Calculate checksum
+        curl -sL "$SOURCE_URL" | sha256sum | cut -d' ' -f1 > checksum.txt
+        SOURCE_SHA=$(cat checksum.txt)
+        
+        # Clone AUR repo
+        git clone ssh://aur@aur.archlinux.org/lazycelery.git aur-lazycelery
+        cd aur-lazycelery
+        
+        # Update PKGBUILD
+        cp ../main-repo/packaging/aur/PKGBUILD .
+        sed -i "s/PLACEHOLDER_SHA256/$SOURCE_SHA/g" PKGBUILD
+        sed -i "s/pkgver=0.2.0/pkgver=$VERSION/g" PKGBUILD
+        sed -i "s/pkgrel=1/pkgrel=1/g" PKGBUILD
+        
+        # Update .SRCINFO
+        makepkg --printsrcinfo > .SRCINFO
+        
+        # Commit and push
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add PKGBUILD .SRCINFO
+        git commit -m "Update to v$VERSION"
+        git push
+        
+        echo "✅ AUR source package updated to v$VERSION"
+    
+    - name: Update AUR binary package
+      run: |
+        if [ ! -f ~/.ssh/id_rsa ]; then exit 0; fi
+        
+        VERSION=${GITHUB_REF#refs/tags/v}
+        LINUX_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-linux-x86_64.tar.gz"
+        
+        # Calculate checksum
+        curl -sL "$LINUX_URL" | sha256sum | cut -d' ' -f1 > checksum.txt
+        LINUX_SHA=$(cat checksum.txt)
+        
+        # Clone AUR repo
+        git clone ssh://aur@aur.archlinux.org/lazycelery-bin.git aur-lazycelery-bin
+        cd aur-lazycelery-bin
+        
+        # Update PKGBUILD
+        cp ../main-repo/packaging/aur/PKGBUILD-bin PKGBUILD
+        sed -i "s/PLACEHOLDER_SHA256/$LINUX_SHA/g" PKGBUILD
+        sed -i "s/pkgver=0.2.0/pkgver=$VERSION/g" PKGBUILD
+        sed -i "s/pkgrel=1/pkgrel=1/g" PKGBUILD
+        
+        # Update .SRCINFO
+        makepkg --printsrcinfo > .SRCINFO
+        
+        # Commit and push
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add PKGBUILD .SRCINFO
+        git commit -m "Update to v$VERSION"
+        git push
+        
+        echo "✅ AUR binary package updated to v$VERSION"
+
+  # Update Scoop bucket
+  update-scoop:
+    name: Update Scoop Manifest
+    runs-on: ubuntu-latest
+    needs: update-package-managers
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.SCOOP_BUCKET_TOKEN || secrets.GITHUB_TOKEN }}
+        repository: Fguedes90/scoop-bucket
+        path: scoop-bucket
+    
+    - uses: actions/checkout@v4
+      with:
+        path: main-repo
+    
+    - name: Update Scoop manifest
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        WINDOWS_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-windows-x86_64.zip"
+        
+        # Calculate checksum
+        curl -sL "$WINDOWS_URL" | sha256sum | cut -d' ' -f1 > checksum.txt
+        WINDOWS_SHA=$(cat checksum.txt)
+        
+        # Update manifest
+        cd scoop-bucket
+        cp ../main-repo/packaging/scoop/lazycelery.json bucket/lazycelery.json
+        
+        # Replace placeholders
+        sed -i "s/PLACEHOLDER_SHA256/$WINDOWS_SHA/g" bucket/lazycelery.json
+        sed -i "s/0.2.0/$VERSION/g" bucket/lazycelery.json
+        
+        # Commit and push
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add bucket/lazycelery.json
+        git commit -m "Update lazycelery to v$VERSION"
+        git push
+        
+        echo "✅ Scoop manifest updated to v$VERSION"
+
+  # Update Snap package
+  update-snap:
+    name: Update Snap Package
+    runs-on: ubuntu-latest
+    needs: update-package-managers
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Snapcraft
+      run: |
+        sudo snap install snapcraft --classic
+        
+        # Configure Snapcraft credentials if available
+        if [ -n "${{ secrets.SNAP_STORE_LOGIN }}" ]; then
+          echo "${{ secrets.SNAP_STORE_LOGIN }}" | base64 -d > snapcraft-login
+          snapcraft login --with snapcraft-login
+          echo "✅ Snapcraft authenticated"
+        else
+          echo "⚠️  SNAP_STORE_LOGIN not configured, skipping Snap store upload"
+        fi
+    
+    - name: Update and build Snap package
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        
+        # Update snapcraft.yaml
+        cp packaging/snap/snapcraft.yaml .
+        sed -i "s/version: '0.2.0'/version: '$VERSION'/g" snapcraft.yaml
+        sed -i "s/source-tag: v0.2.0/source-tag: v$VERSION/g" snapcraft.yaml
+        
+        # Build snap
+        snapcraft
+        
+        # Upload if credentials available
+        if [ -f snapcraft-login ]; then
+          snapcraft upload --release=stable lazycelery_${VERSION}_*.snap
+          echo "✅ Snap uploaded to store"
+        else
+          echo "📦 Snap built but not uploaded (no credentials)"
+        fi

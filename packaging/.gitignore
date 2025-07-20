@@ -1,0 +1,23 @@
+# Package manager working files
+*.pkg.tar.xz
+*.deb
+*.rpm
+*.snap
+*.nupkg
+*.zip
+*.tar.gz
+
+# Temporary build files
+build/
+dist/
+target/
+
+# Checksums and metadata
+checksums.txt
+*.SRCINFO
+*.buildinfo
+
+# Package manager specific
+chocolatey/tools/*.exe
+scoop/generated/
+homebrew/generated/

@@ -23,7 +23,18 @@ pub struct App {
     pub show_help: bool,
     pub search_query: String,
     pub is_searching: bool,
+    pub show_confirmation: bool,
+    pub confirmation_message: String,
+    pub pending_action: Option<PendingAction>,
+    pub status_message: String,
     broker: Arc<Mutex<Box<dyn Broker>>>,
+}
+
+#[derive(Debug, Clone)]
+pub enum PendingAction {
+    PurgeQueue(String),
+    RetryTask(String),
+    RevokeTask(String),
 }
 
 impl App {
@@ -40,6 +51,10 @@ impl App {
             show_help: false,
             search_query: String::new(),
             is_searching: false,
+            show_confirmation: false,
+            confirmation_message: String::new(),
+            pending_action: None,
+            status_message: String::new(),
             broker: Arc::new(Mutex::new(broker)),
         }
     }
@@ -176,6 +191,91 @@ impl App {
                             .contains(&self.search_query.to_lowercase())
                 })
                 .collect()
+        }
+    }
+
+    pub fn show_confirmation_dialog(&mut self, message: String, action: PendingAction) {
+        self.confirmation_message = message;
+        self.pending_action = Some(action);
+        self.show_confirmation = true;
+    }
+
+    pub fn hide_confirmation_dialog(&mut self) {
+        self.show_confirmation = false;
+        self.confirmation_message.clear();
+        self.pending_action = None;
+    }
+
+    pub fn set_status_message(&mut self, message: String) {
+        self.status_message = message;
+    }
+
+    pub fn clear_status_message(&mut self) {
+        self.status_message.clear();
+    }
+
+    pub async fn execute_pending_action(&mut self) -> Result<(), AppError> {
+        if let Some(action) = self.pending_action.take() {
+            let message = {
+                let broker = self.broker.lock().await;
+
+                match &action {
+                    PendingAction::PurgeQueue(queue_name) => {
+                        match broker.purge_queue(queue_name).await {
+                            Ok(count) => {
+                                format!("Purged {count} messages from queue '{queue_name}'")
+                            }
+                            Err(e) => format!("Failed to purge queue '{queue_name}': {e}"),
+                        }
+                    }
+                    PendingAction::RetryTask(task_id) => match broker.retry_task(task_id).await {
+                        Ok(_) => format!("Task '{task_id}' marked for retry"),
+                        Err(e) => format!("Failed to retry task '{task_id}': {e}"),
+                    },
+                    PendingAction::RevokeTask(task_id) => match broker.revoke_task(task_id).await {
+                        Ok(_) => format!("Task '{task_id}' revoked"),
+                        Err(e) => format!("Failed to revoke task '{task_id}': {e}"),
+                    },
+                }
+            };
+
+            self.set_status_message(message);
+        }
+
+        self.hide_confirmation_dialog();
+        Ok(())
+    }
+
+    pub fn initiate_purge_queue(&mut self) {
+        if !self.queues.is_empty() && self.selected_tab == Tab::Queues {
+            let queue = &self.queues[self.selected_queue];
+            let message = format!(
+                "Are you sure you want to purge all {} messages from queue '{}'?",
+                queue.length, queue.name
+            );
+            self.show_confirmation_dialog(message, PendingAction::PurgeQueue(queue.name.clone()));
+        }
+    }
+
+    pub fn initiate_retry_task(&mut self) {
+        if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
+            let filtered_tasks = self.get_filtered_tasks();
+            if self.selected_task < filtered_tasks.len() {
+                let task = filtered_tasks[self.selected_task];
+                let message = format!("Are you sure you want to retry task '{}'?", task.id);
+                self.show_confirmation_dialog(message, PendingAction::RetryTask(task.id.clone()));
+            }
+        }
+    }
+
+    pub fn initiate_revoke_task(&mut self) {
+        if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
+            let filtered_tasks = self.get_filtered_tasks();
+            if self.selected_task < filtered_tasks.len() {
+                let task = filtered_tasks[self.selected_task];
+                let message = format!("Are you sure you want to revoke task '{}'?", task.id);
+                self.show_confirmation_dialog(message, PendingAction::RevokeTask(task.id.clone()));
+            }
         }
     }
 }

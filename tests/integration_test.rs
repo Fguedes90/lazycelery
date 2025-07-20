@@ -142,6 +142,10 @@ impl Broker for IntegrationTestBroker {
     async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
         Ok(())
     }
+
+    async fn purge_queue(&self, _queue_name: &str) -> Result<u64, BrokerError> {
+        Ok(42) // Return some test value
+    }
 }
 
 #[tokio::test]

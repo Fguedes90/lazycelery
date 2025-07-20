@@ -33,9 +33,32 @@ pub fn handle_key_event(key: KeyEvent, app: &mut crate::app::App) {
         return;
     }
 
+    if app.show_confirmation {
+        match key.code {
+            KeyCode::Char('y') | KeyCode::Char('Y') | KeyCode::Enter => {
+                // Confirmation dialog will be handled in main loop
+            }
+            KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                app.hide_confirmation_dialog();
+            }
+            _ => {}
+        }
+        return;
+    }
+
     if app.show_help {
         app.toggle_help();
         return;
+    }
+
+    // Clear status message on any key press (except actions that set new status)
+    match key.code {
+        KeyCode::Char('p') | KeyCode::Char('r') | KeyCode::Char('x') => {
+            // These will set their own status messages
+        }
+        _ => {
+            app.clear_status_message();
+        }
     }
 
     match key.code {
@@ -46,6 +69,9 @@ pub fn handle_key_event(key: KeyEvent, app: &mut crate::app::App) {
         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
         KeyCode::Down | KeyCode::Char('j') => app.select_next(),
         KeyCode::Char('/') => app.start_search(),
+        KeyCode::Char('p') => app.initiate_purge_queue(),
+        KeyCode::Char('r') => app.initiate_retry_task(),
+        KeyCode::Char('x') => app.initiate_revoke_task(),
         _ => {}
     }
 }

@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "description": "Terminal UI for monitoring and managing Celery workers and tasks",
+    "homepage": "https://github.com/Fguedes90/lazycelery",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/Fguedes90/lazycelery/releases/download/v0.2.0/lazycelery-windows-x86_64.zip",
+            "hash": "PLACEHOLDER_SHA256",
+            "extract_dir": ""
+        }
+    },
+    "bin": "lazycelery.exe",
+    "checkver": {
+        "github": "https://github.com/Fguedes90/lazycelery"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/Fguedes90/lazycelery/releases/download/v$version/lazycelery-windows-x86_64.zip"
+            }
+        }
+    }
+}

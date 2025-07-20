@@ -2,51 +2,215 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Aggressive cargo optimizations to avoid re-downloading crates
+  CARGO_NET_RETRY: 10
+  CARGO_INCREMENTAL: 1
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  # Use sparse registry for faster index updates
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
+  # Combine quick checks into one job for faster feedback
+  quality-checks:
+    name: Code Quality (Format, Lint, Check)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup aggressive Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        # Cache everything aggressively
+        shared-key: "quality-checks"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+    
+    - name: Install mise (cached)
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install Rust components (cached)
+      run: |
+        rustup component add clippy rustfmt
+    
+    - name: Cache cargo check
+      run: |
+        # Use cargo check with cache optimization
+        if ! cargo check --locked; then
+          echo "❌ Cargo check failed"
+          exit 1
+        fi
+        echo "✅ Cargo check passed"
+    
+    - name: Check formatting (fast)
+      run: |
+        if ! cargo fmt --all --check; then
+          echo "❌ Code is not formatted correctly"
+          echo "Run 'cargo fmt' to fix formatting"
+          exit 1
+        fi
+        echo "✅ Code formatting is correct"
+    
+    - name: Run clippy (cached)
+      run: |
+        if ! cargo clippy --locked --all-targets --all-features -- -D warnings; then
+          echo "❌ Linting failed"
+          exit 1
+        fi
+        echo "✅ All linting checks passed"
+
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 2s
+          --health-retries 2
+    
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install mise
+    - name: Setup super aggressive Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        # Maximum caching for tests
+        shared-key: "test-deps"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        # Cache all targets
+        cache-targets: "true"
+        cache-all-crates: "true"
+    
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Run tests
-      run: mise run test
+    - name: Cache APT packages
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: redis-tools
+        version: 1.0
     
-    - name: Run linter
-      run: mise run lint
-    
-    - name: Run formatter check
-      run: mise run fmt -- --check
-    
-    - name: Security audit
-      run: mise run audit
+    - name: Run tests with maximum optimization
+      run: |
+        echo "Running tests with cache optimization..."
+        # Use locked deps to avoid re-downloading
+        if ! cargo test --locked --release --jobs $(nproc); then
+          echo "❌ Tests failed"
+          exit 1
+        fi
+        echo "✅ All tests passed"
 
-  build:
-    name: Build
+  security:
+    name: Security Audit
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install mise
+    - name: Setup aggressive security cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: "security-audit"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+    
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Build release
-      run: mise run build
+    - name: Install and run security audit
+      run: |
+        # Install cargo-audit if not cached
+        cargo install cargo-audit --locked
+        
+        # Run security audit (cargo audit doesn't support --locked flag)
+        if ! cargo audit; then
+          echo "❌ Security audit failed"
+          exit 1
+        fi
+        echo "✅ Security audit passed"
+
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup maximum build cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: "build-${{ matrix.os }}"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        cache-targets: "true"
+        cache-all-crates: "true"
+    
+    - name: Install mise (cached)
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build release with maximum cache optimization
+      run: |
+        echo "Building on ${{ matrix.os }}"
+        # Use locked deps and parallel compilation
+        cargo build --locked --release --jobs $(nproc || echo 4)
+        echo "✅ Build successful on ${{ matrix.os }}"
+    
+    - name: Test binary (Unix)
+      if: matrix.os != 'windows-latest'
+      run: |
+        ./target/release/lazycelery --help
+        echo "✅ Binary works correctly"
+    
+    - name: Test binary (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        .\target\release\lazycelery.exe --help
+        echo "✅ Binary works correctly"

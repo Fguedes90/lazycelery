@@ -41,8 +41,9 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
         with:
-          version: latest
           install: true
+          cache: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install git-cliff
         run: mise install git-cliff
@@ -111,8 +112,9 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
         with:
-          version: latest
           install: true
+          cache: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install cross-compilation tools
         if: matrix.os == 'ubuntu-latest'

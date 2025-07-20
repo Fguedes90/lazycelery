@@ -172,13 +172,38 @@ mod integration_tests {
             }
         };
 
-        populate_test_data(&client).await?;
+        // Use unique task IDs to avoid interference with other tests
+        let mut conn = client.get_multiplexed_tokio_connection().await?;
+        let task_data = serde_json::json!({
+            "task": "myapp.tasks.process_data",
+            "args": "[1, 2, 3]",
+            "kwargs": "{\"timeout\": 30}",
+            "status": "SUCCESS",
+            "hostname": "worker-1",
+            "result": "\"Processing completed\"",
+            "traceback": null
+        });
+        let _: () = conn
+            .set("celery-task-meta-unique-test-task-1", task_data.to_string())
+            .await?;
+
+        let failed_task_data = serde_json::json!({
+            "task": "myapp.tasks.failing_task",
+            "args": "[]",
+            "kwargs": "{}",
+            "status": "FAILURE",
+            "hostname": "worker-2",
+            "result": null,
+            "traceback": "Traceback (most recent call last):\n  File...\nZeroDivisionError: division by zero"
+        });
+        let _: () = conn
+            .set("celery-task-meta-unique-test-task-2", failed_task_data.to_string())
+            .await?;
 
         // Add small delay to ensure data is persisted in CI environment
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         // Debug: Verify test data was actually set
-        let mut conn = client.get_multiplexed_tokio_connection().await?;
         let keys: Vec<String> = conn.keys("celery-task-meta-*").await?;
         eprintln!("DEBUG: Found {} task metadata keys: {:?}", keys.len(), keys);
 
@@ -202,7 +227,7 @@ mod integration_tests {
         );
 
         // Find the successful task (real Celery metadata doesn't have task name)
-        let success_task = tasks.iter().find(|t| t.id == "test-task-1").unwrap();
+        let success_task = tasks.iter().find(|t| t.id == "unique-test-task-1").unwrap();
         assert_eq!(success_task.status, TaskStatus::Success);
         assert_eq!(success_task.worker, None); // Real Celery metadata doesn't include worker hostname
                                                // Result pode ter aspas duplas extras devido ao JSON encoding
@@ -218,7 +243,7 @@ mod integration_tests {
         );
 
         // Find the failed task
-        let failed_task = tasks.iter().find(|t| t.id == "test-task-2").unwrap();
+        let failed_task = tasks.iter().find(|t| t.id == "unique-test-task-2").unwrap();
         assert_eq!(failed_task.status, TaskStatus::Failure);
         assert_eq!(failed_task.worker, None); // Real Celery metadata doesn't include worker hostname
         assert!(failed_task.traceback.is_some());

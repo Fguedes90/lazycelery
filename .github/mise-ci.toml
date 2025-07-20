@@ -1,0 +1,32 @@
+# mise configuration for CI/CD environments
+# This file is used in GitHub Actions
+
+[env]
+CI = "true"
+RUST_LOG = "info"
+RUST_BACKTRACE = "full"
+
+[tools]
+rust = "1.75.0"
+cargo-audit = "latest"
+cargo-tarpaulin = "latest"
+
+[tasks.ci-test]
+description = "Run tests for CI"
+run = "cargo test --all-features --verbose"
+
+[tasks.ci-lint]
+description = "Run linting for CI"
+run = "cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.ci-fmt]
+description = "Check formatting for CI"
+run = "cargo fmt --all -- --check"
+
+[tasks.ci-audit]
+description = "Run security audit for CI"
+run = "cargo audit"
+
+[tasks.ci-all]
+description = "Run all CI checks"
+depends = ["ci-fmt", "ci-lint", "ci-test", "ci-audit"]

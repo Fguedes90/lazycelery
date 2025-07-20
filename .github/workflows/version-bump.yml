@@ -1,0 +1,103 @@
+name: Version Bump & Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prepatch
+          - preminor
+          - premajor
+          - prerelease
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version-bump:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          version: latest
+          install: true
+
+      - name: Install tools
+        run: |
+          mise install cargo-edit
+          mise install git-cliff
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump version
+        run: mise run version-bump ${{ github.event.inputs.version_type }}
+
+      - name: Get new version
+        id: new_version
+        run: |
+          NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update CHANGELOG.md
+        run: |
+          mise run changelog
+          git add CHANGELOG.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): bump version to ${{ steps.new_version.outputs.new_version }}"
+          title: "chore(release): bump version to ${{ steps.new_version.outputs.new_version }}"
+          body: |
+            ## Version Bump
+
+            This PR bumps the version from `${{ steps.current_version.outputs.current_version }}` to `${{ steps.new_version.outputs.new_version }}`.
+
+            ### Changes
+            - Updated version in Cargo.toml
+            - Updated CHANGELOG.md with latest changes
+
+            ### Next Steps
+            1. Review the changes
+            2. Merge this PR
+            3. Create a new tag: `git tag v${{ steps.new_version.outputs.new_version }}`
+            4. Push the tag: `git push origin v${{ steps.new_version.outputs.new_version }}`
+            5. The release workflow will automatically create a new release
+
+            ---
+            *This PR was automatically created by the Version Bump workflow.*
+          branch: release/v${{ steps.new_version.outputs.new_version }}
+          delete-branch: true
+          labels: |
+            release
+            automated-pr

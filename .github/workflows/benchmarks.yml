@@ -1,0 +1,133 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-bench-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install criterion
+        run: cargo install cargo-criterion
+
+      - name: Start Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
+          sudo systemctl start redis-server
+
+      - name: Run benchmarks
+        run: |
+          mkdir -p benches
+          cat > benches/basic_bench.rs << 'EOF'
+          use criterion::{black_box, criterion_group, criterion_main, Criterion};
+          use lazycelery::models::{Worker, WorkerStatus, Task, TaskStatus, Queue};
+          
+          fn benchmark_worker_creation(c: &mut Criterion) {
+              c.bench_function("create worker", |b| {
+                  b.iter(|| {
+                      let worker = Worker {
+                          hostname: black_box("test-worker".to_string()),
+                          status: WorkerStatus::Online,
+                          concurrency: black_box(4),
+                          queues: vec!["default".to_string()],
+                          active_tasks: vec![],
+                          processed: black_box(1000),
+                          failed: black_box(10),
+                      };
+                      black_box(worker);
+                  })
+              });
+          }
+          
+          fn benchmark_worker_utilization(c: &mut Criterion) {
+              let mut worker = Worker {
+                  hostname: "test-worker".to_string(),
+                  status: WorkerStatus::Online,
+                  concurrency: 8,
+                  queues: vec!["default".to_string()],
+                  active_tasks: vec!["task1".to_string(), "task2".to_string(), "task3".to_string()],
+                  processed: 1000,
+                  failed: 10,
+              };
+              
+              c.bench_function("calculate utilization", |b| {
+                  b.iter(|| {
+                      black_box(worker.utilization());
+                  })
+              });
+          }
+          
+          criterion_group!(benches, benchmark_worker_creation, benchmark_worker_utilization);
+          criterion_main!(benches);
+          EOF
+          
+          # Add criterion to dev-dependencies
+          echo '' >> Cargo.toml
+          echo '[dev-dependencies]' >> Cargo.toml
+          echo 'criterion = { version = "0.5", features = ["html_reports"] }' >> Cargo.toml
+          echo '' >> Cargo.toml
+          echo '[[bench]]' >> Cargo.toml
+          echo 'name = "basic_bench"' >> Cargo.toml
+          echo 'harness = false' >> Cargo.toml
+          
+          cargo criterion --output-format json > benchmark-results.json || true
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        if: github.event_name != 'pull_request'
+        with:
+          name: Rust Benchmarks
+          tool: 'cargo'
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          # Show alert with commit comment on detecting possible performance regression
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: false
+
+      - name: Comment PR with benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        if: github.event_name == 'pull_request'
+        with:
+          name: Rust Benchmarks
+          tool: 'cargo'
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Show alert with commit comment on detecting possible performance regression
+          alert-threshold: '150%'
+          comment-always: true
+          fail-on-alert: false

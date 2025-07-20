@@ -1,6 +1,17 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
   push:
     tags:
       - 'v*'
@@ -9,13 +20,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
+  prepare-release:
+    name: Prepare Release
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      new_version: ${{ steps.version.outputs.version }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -24,26 +39,101 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Configure git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Install dependencies
+      run: |
+        cargo install cargo-edit
+        mise install git-cliff
+    
+    - name: Bump version
+      run: |
+        echo "Bumping version (${{ github.event.inputs.version_type }})"
+        cargo set-version --bump ${{ github.event.inputs.version_type }}
+        NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      id: version
+    
+    - name: Update version in UI
+      run: |
+        sed -i "s/LazyCelery v[0-9]\+\.[0-9]\+\.[0-9]\+/LazyCelery v$NEW_VERSION/g" src/ui/mod.rs
+    
+    - name: Generate changelog
+      run: |
+        git-cliff --tag "v$NEW_VERSION" -o CHANGELOG.md
+    
     - name: Run tests
       run: mise run test
     
-    - name: Build release
-      run: mise run build
+    - name: Commit changes
+      run: |
+        git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs
+        git commit -m "chore(release): prepare for v$NEW_VERSION"
+    
+    - name: Create and push tag
+      run: |
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin main
+        git push origin "v$NEW_VERSION"
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install git-cliff
+      run: mise install git-cliff
+    
+    - name: Get version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        git-cliff --latest --strip header > release_notes.md
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Run tests before release
+      run: mise run test
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: LazyCelery v${{ steps.version.outputs.version }}
+        body: ${{ steps.release_notes.outputs.notes }}
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.version, '-') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
 
   build-binaries:
     name: Build Binaries
     needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -51,12 +141,19 @@ jobs:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
           name: lazycelery-linux-x86_64
+          archive: tar.gz
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           name: lazycelery-windows-x86_64.exe
+          archive: zip
         - os: macos-latest
           target: x86_64-apple-darwin
           name: lazycelery-macos-x86_64
+          archive: tar.gz
+        - os: macos-latest
+          target: aarch64-apple-darwin
+          name: lazycelery-macos-aarch64
+          archive: tar.gz
     
     steps:
     - uses: actions/checkout@v4
@@ -68,21 +165,34 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Add target
+      run: rustup target add ${{ matrix.target }}
+    
     - name: Build binary
       run: |
-        mise run build
+        cargo build --release --target ${{ matrix.target }} --locked
+        
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp target/release/lazycelery.exe ${{ matrix.name }}
+          cp target/${{ matrix.target }}/release/lazycelery.exe ${{ matrix.name }}
         else
-          cp target/release/lazycelery ${{ matrix.name }}
+          cp target/${{ matrix.target }}/release/lazycelery ${{ matrix.name }}
         fi
     
+    - name: Create archive
+      run: |
+        if [ "${{ matrix.archive }}" = "zip" ]; then
+          7z a ${{ matrix.name }}.zip ${{ matrix.name }}
+          ASSET_PATH="${{ matrix.name }}.zip"
+        else
+          tar -czf ${{ matrix.name }}.tar.gz ${{ matrix.name }}
+          ASSET_PATH="${{ matrix.name }}.tar.gz"
+        fi
+        echo "ASSET_PATH=$ASSET_PATH" >> $GITHUB_ENV
+    
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: ${{ env.ASSET_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./${{ matrix.name }}
-        asset_name: ${{ matrix.name }}
-        asset_content_type: application/octet-stream

@@ -2,16 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
-  test:
-    name: Test
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -23,21 +24,123 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Check Cargo.toml format
+      run: |
+        if ! cargo check --quiet; then
+          echo "❌ Cargo check failed"
+          exit 1
+        fi
+        echo "✅ Cargo check passed"
+
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Check formatting
+      run: |
+        if ! mise run fmt -- --check; then
+          echo "❌ Code is not formatted correctly"
+          echo "Run 'mise run fmt' to fix formatting"
+          exit 1
+        fi
+        echo "✅ Code formatting is correct"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Run clippy
+      run: |
+        if ! mise run lint; then
+          echo "❌ Linting failed"
+          exit 1
+        fi
+        echo "✅ All linting checks passed"
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Wait for Redis
+      run: |
+        timeout 30 bash -c 'until redis-cli ping; do sleep 1; done'
+        echo "✅ Redis is ready"
+    
     - name: Run tests
-      run: mise run test
+      run: |
+        echo "Running 81 tests..."
+        if ! mise run test; then
+          echo "❌ Tests failed"
+          exit 1
+        fi
+        echo "✅ All tests passed"
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
     
-    - name: Run linter
-      run: mise run lint
-    
-    - name: Run formatter check
-      run: mise run fmt -- --check
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Security audit
-      run: mise run audit
+      run: |
+        if ! mise run audit; then
+          echo "❌ Security audit failed"
+          exit 1
+        fi
+        echo "✅ Security audit passed"
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
     steps:
     - uses: actions/checkout@v4
     
@@ -49,4 +152,19 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Build release
-      run: mise run build
+      run: |
+        echo "Building on ${{ matrix.os }}"
+        if ! mise run build; then
+          echo "❌ Build failed on ${{ matrix.os }}"
+          exit 1
+        fi
+        echo "✅ Build successful on ${{ matrix.os }}"
+    
+    - name: Test binary
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          ./target/release/lazycelery.exe --help
+        else
+          ./target/release/lazycelery --help
+        fi
+        echo "✅ Binary works correctly"

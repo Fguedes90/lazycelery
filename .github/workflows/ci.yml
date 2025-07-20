@@ -24,6 +24,10 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Install Rust components
+      run: |
+        rustup component add clippy rustfmt
+    
     - name: Check Cargo.toml format
       run: |
         if ! cargo check --quiet; then
@@ -44,6 +48,10 @@ jobs:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install Rust components
+      run: |
+        rustup component add rustfmt
     
     - name: Check formatting
       run: |
@@ -66,6 +74,10 @@ jobs:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install Rust components
+      run: |
+        rustup component add clippy
     
     - name: Run clippy
       run: |
@@ -98,6 +110,11 @@ jobs:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install Redis CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y redis-tools
     
     - name: Wait for Redis
       run: |
@@ -154,17 +171,17 @@ jobs:
     - name: Build release
       run: |
         echo "Building on ${{ matrix.os }}"
-        if ! mise run build; then
-          echo "❌ Build failed on ${{ matrix.os }}"
-          exit 1
-        fi
+        mise run build
         echo "✅ Build successful on ${{ matrix.os }}"
     
-    - name: Test binary
+    - name: Test binary (Unix)
+      if: matrix.os != 'windows-latest'
       run: |
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          ./target/release/lazycelery.exe --help
-        else
-          ./target/release/lazycelery --help
-        fi
+        ./target/release/lazycelery --help
+        echo "✅ Binary works correctly"
+    
+    - name: Test binary (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        .\target\release\lazycelery.exe --help
         echo "✅ Binary works correctly"

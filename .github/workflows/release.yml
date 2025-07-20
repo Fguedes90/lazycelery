@@ -44,8 +44,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
     
-    - name: Install dependencies
+    - name: Install Rust components and dependencies
       run: |
+        rustup component add rustfmt clippy
         cargo install cargo-edit
         mise install git-cliff
     
@@ -178,16 +179,17 @@ jobs:
           cp target/${{ matrix.target }}/release/lazycelery ${{ matrix.name }}
         fi
     
-    - name: Create archive
+    - name: Create archive (Unix)
+      if: matrix.archive == 'tar.gz'
       run: |
-        if [ "${{ matrix.archive }}" = "zip" ]; then
-          7z a ${{ matrix.name }}.zip ${{ matrix.name }}
-          ASSET_PATH="${{ matrix.name }}.zip"
-        else
-          tar -czf ${{ matrix.name }}.tar.gz ${{ matrix.name }}
-          ASSET_PATH="${{ matrix.name }}.tar.gz"
-        fi
-        echo "ASSET_PATH=$ASSET_PATH" >> $GITHUB_ENV
+        tar -czf ${{ matrix.name }}.tar.gz ${{ matrix.name }}
+        echo "ASSET_PATH=${{ matrix.name }}.tar.gz" >> $GITHUB_ENV
+    
+    - name: Create archive (Windows)
+      if: matrix.archive == 'zip'
+      run: |
+        Compress-Archive -Path ${{ matrix.name }} -DestinationPath ${{ matrix.name }}.zip
+        echo "ASSET_PATH=${{ matrix.name }}.zip" >> $env:GITHUB_ENV
     
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1

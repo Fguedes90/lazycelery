@@ -11,8 +11,9 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  check:
-    name: Check
+  # Combine quick checks into one job for faster feedback
+  quality-checks:
+    name: Code Quality (Format, Lint, Check)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -35,23 +36,6 @@ jobs:
           exit 1
         fi
         echo "✅ Cargo check passed"
-
-  format:
-    name: Format Check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install mise
-      uses: jdx/mise-action@v2
-      with:
-        install: true
-        cache: true
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Install Rust components
-      run: |
-        rustup component add rustfmt
     
     - name: Check formatting
       run: |
@@ -61,23 +45,6 @@ jobs:
           exit 1
         fi
         echo "✅ Code formatting is correct"
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install mise
-      uses: jdx/mise-action@v2
-      with:
-        install: true
-        cache: true
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Install Rust components
-      run: |
-        rustup component add clippy
     
     - name: Run clippy
       run: |
@@ -97,12 +64,17 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 3
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: "test-cache"
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -111,20 +83,16 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Install Redis CLI
+    - name: Install Redis CLI (cached)
       run: |
-        sudo apt-get update
+        sudo apt-get update -qq
         sudo apt-get install -y redis-tools
     
-    - name: Wait for Redis
+    - name: Run tests in parallel
       run: |
-        timeout 30 bash -c 'until redis-cli ping; do sleep 1; done'
-        echo "✅ Redis is ready"
-    
-    - name: Run tests
-      run: |
-        echo "Running 81 tests..."
-        if ! mise run test; then
+        echo "Running tests with optimizations..."
+        # Run tests in parallel with release mode for faster execution
+        if ! cargo test --release --jobs $(nproc); then
           echo "❌ Tests failed"
           exit 1
         fi
@@ -135,6 +103,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: "security-cache"
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -152,14 +125,20 @@ jobs:
         echo "✅ Security audit passed"
 
   build:
-    name: Build
+    name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: "build-${{ matrix.os }}"
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -168,10 +147,11 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Build release
+    - name: Build release (optimized)
       run: |
         echo "Building on ${{ matrix.os }}"
-        mise run build
+        # Use parallel compilation
+        cargo build --release --jobs $(nproc || echo 4)
         echo "✅ Build successful on ${{ matrix.os }}"
     
     - name: Test binary (Unix)

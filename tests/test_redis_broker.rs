@@ -173,6 +173,11 @@ mod integration_tests {
         };
 
         populate_test_data(&client).await?;
+        
+        // Debug: Verify test data was actually set
+        let mut conn = client.get_multiplexed_tokio_connection().await?;
+        let keys: Vec<String> = conn.keys("celery-task-meta-*").await?;
+        eprintln!("DEBUG: Found {} task metadata keys: {:?}", keys.len(), keys);
 
         let broker = RedisBroker::connect("redis://127.0.0.1:6379/1")
             .await
@@ -180,8 +185,14 @@ mod integration_tests {
 
         let tasks = broker.get_tasks().await?;
 
+        // Debug output for CI troubleshooting
+        eprintln!("DEBUG: Found {} tasks in CI", tasks.len());
+        for task in &tasks {
+            eprintln!("DEBUG: Task ID: {}, Status: {:?}", task.id, task.status);
+        }
+
         // Should parse our test tasks (real implementation)
-        assert!(tasks.len() >= 2, "Should find at least 2 tasks");
+        assert!(tasks.len() >= 2, "Should find at least 2 tasks, found {}", tasks.len());
 
         // Find the successful task (real Celery metadata doesn't have task name)
         let success_task = tasks.iter().find(|t| t.id == "test-task-1").unwrap();

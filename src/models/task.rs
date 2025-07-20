@@ -1,11 +1,11 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub id: String,
     pub name: String,
-    pub args: String,  // JSON string
+    pub args: String,   // JSON string
     pub kwargs: String, // JSON string
     pub status: TaskStatus,
     pub worker: Option<String>,

@@ -1,7 +1,7 @@
-pub mod worker;
-pub mod task;
 pub mod queue;
+pub mod task;
+pub mod worker;
 
-pub use worker::{Worker, WorkerStatus};
-pub use task::{Task, TaskStatus};
 pub use queue::Queue;
+pub use task::{Task, TaskStatus};
+pub use worker::{Worker, WorkerStatus};

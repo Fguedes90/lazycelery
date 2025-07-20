@@ -1,5 +1,5 @@
-pub mod widgets;
 pub mod events;
+pub mod widgets;
 
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -10,15 +10,15 @@ use ratatui::{
 };
 
 use crate::app::{App, Tab};
-use crate::ui::widgets::{WorkerWidget, TaskWidget, QueueWidget};
+use crate::ui::widgets::{QueueWidget, TaskWidget, WorkerWidget};
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Header
-            Constraint::Min(0),     // Main content
-            Constraint::Length(3),  // Status bar
+            Constraint::Length(3), // Header
+            Constraint::Min(0),    // Main content
+            Constraint::Length(3), // Status bar
         ])
         .split(f.size());
 
@@ -50,7 +50,11 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     };
 
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title(" LazyCelery v0.1.0 "))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" LazyCelery v0.1.0 "),
+        )
         .select(selected)
         .style(Style::default().fg(Color::Cyan))
         .highlight_style(

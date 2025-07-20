@@ -1,7 +1,7 @@
-pub mod workers;
-pub mod tasks;
 pub mod queues;
+pub mod tasks;
+pub mod workers;
 
-pub use workers::WorkerWidget;
-pub use tasks::TaskWidget;
 pub use queues::QueueWidget;
+pub use tasks::TaskWidget;
+pub use workers::WorkerWidget;

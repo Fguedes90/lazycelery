@@ -41,10 +41,7 @@ impl QueueWidget {
                 let content = Line::from(vec![
                     Span::raw(&queue.name),
                     Span::raw("   "),
-                    Span::styled(
-                        queue.length.to_string(),
-                        Style::default().fg(status_color),
-                    ),
+                    Span::styled(queue.length.to_string(), Style::default().fg(status_color)),
                 ]);
 
                 if idx == app.selected_queue {
@@ -76,8 +73,11 @@ impl QueueWidget {
 
     fn draw_queue_details(f: &mut Frame, app: &App, area: Rect) {
         if app.queues.is_empty() {
-            let no_queues = Paragraph::new("No queues found")
-                .block(Block::default().borders(Borders::ALL).title(" Queue Details "));
+            let no_queues = Paragraph::new("No queues found").block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Queue Details "),
+            );
             f.render_widget(no_queues, area);
             return;
         }
@@ -135,16 +135,17 @@ impl QueueWidget {
                     ),
                 ]),
                 Line::from(""),
-                Line::from(vec![
-                    Span::styled(
-                        "[p] Purge queue (requires confirmation)",
-                        Style::default().fg(Color::DarkGray),
-                    ),
-                ]),
+                Line::from(vec![Span::styled(
+                    "[p] Purge queue (requires confirmation)",
+                    Style::default().fg(Color::DarkGray),
+                )]),
             ];
 
-            let info = Paragraph::new(info_lines)
-                .block(Block::default().borders(Borders::ALL).title(" Queue Details "));
+            let info = Paragraph::new(info_lines).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Queue Details "),
+            );
             f.render_widget(info, chunks[0]);
 
             // Queue fill gauge

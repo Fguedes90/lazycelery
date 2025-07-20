@@ -1,8 +1,8 @@
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use crate::models::{Worker, Task, Queue};
 use crate::broker::Broker;
 use crate::error::AppError;
+use crate::models::{Queue, Task, Worker};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
@@ -43,21 +43,21 @@ impl App {
             broker: Arc::new(Mutex::new(broker)),
         }
     }
-    
+
     pub async fn refresh_data(&mut self) -> Result<(), AppError> {
         let broker = self.broker.lock().await;
-        
+
         // Fetch all data in parallel
         let (workers_result, tasks_result, queues_result) = tokio::join!(
             broker.get_workers(),
             broker.get_tasks(),
             broker.get_queues()
         );
-        
+
         self.workers = workers_result?;
         self.tasks = tasks_result?;
         self.queues = queues_result?;
-        
+
         // Ensure selection indices are valid
         if self.selected_worker >= self.workers.len() && !self.workers.is_empty() {
             self.selected_worker = self.workers.len() - 1;
@@ -68,10 +68,10 @@ impl App {
         if self.selected_queue >= self.queues.len() && !self.queues.is_empty() {
             self.selected_queue = self.queues.len() - 1;
         }
-        
+
         Ok(())
     }
-    
+
     pub fn next_tab(&mut self) {
         self.selected_tab = match self.selected_tab {
             Tab::Workers => Tab::Queues,
@@ -79,7 +79,7 @@ impl App {
             Tab::Tasks => Tab::Workers,
         };
     }
-    
+
     pub fn previous_tab(&mut self) {
         self.selected_tab = match self.selected_tab {
             Tab::Workers => Tab::Tasks,
@@ -87,7 +87,7 @@ impl App {
             Tab::Tasks => Tab::Queues,
         };
     }
-    
+
     pub fn select_next(&mut self) {
         match self.selected_tab {
             Tab::Workers => {
@@ -108,7 +108,7 @@ impl App {
             }
         }
     }
-    
+
     pub fn select_previous(&mut self) {
         match self.selected_tab {
             Tab::Workers => {
@@ -141,16 +141,16 @@ impl App {
             }
         }
     }
-    
+
     pub fn toggle_help(&mut self) {
         self.show_help = !self.show_help;
     }
-    
+
     pub fn start_search(&mut self) {
         self.is_searching = true;
         self.search_query.clear();
     }
-    
+
     pub fn stop_search(&mut self) {
         self.is_searching = false;
         self.search_query.clear();
@@ -159,7 +159,7 @@ impl App {
             self.selected_task = 0;
         }
     }
-    
+
     pub fn get_filtered_tasks(&self) -> Vec<&Task> {
         if self.search_query.is_empty() {
             self.tasks.iter().collect()
@@ -167,8 +167,13 @@ impl App {
             self.tasks
                 .iter()
                 .filter(|task| {
-                    task.name.to_lowercase().contains(&self.search_query.to_lowercase())
-                        || task.id.to_lowercase().contains(&self.search_query.to_lowercase())
+                    task.name
+                        .to_lowercase()
+                        .contains(&self.search_query.to_lowercase())
+                        || task
+                            .id
+                            .to_lowercase()
+                            .contains(&self.search_query.to_lowercase())
                 })
                 .collect()
         }

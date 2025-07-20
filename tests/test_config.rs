@@ -1,4 +1,4 @@
-use lazycelery::config::{Config, BrokerConfig, UiConfig};
+use lazycelery::config::{BrokerConfig, Config, UiConfig};
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
@@ -6,7 +6,7 @@ use tempfile::tempdir;
 #[test]
 fn test_default_config() {
     let config = Config::default();
-    
+
     assert_eq!(config.broker.url, "redis://localhost:6379/0");
     assert_eq!(config.broker.timeout, 30);
     assert_eq!(config.broker.retry_attempts, 3);
@@ -18,7 +18,7 @@ fn test_default_config() {
 fn test_config_from_file() {
     let dir = tempdir().unwrap();
     let config_path = dir.path().join("test_config.toml");
-    
+
     let config_content = r#"
 [broker]
 url = "redis://192.168.1.100:6379/1"
@@ -29,11 +29,11 @@ retry_attempts = 5
 refresh_interval = 2000
 theme = "light"
 "#;
-    
+
     fs::write(&config_path, config_content).unwrap();
-    
+
     let config = Config::from_file(config_path).unwrap();
-    
+
     assert_eq!(config.broker.url, "redis://192.168.1.100:6379/1");
     assert_eq!(config.broker.timeout, 60);
     assert_eq!(config.broker.retry_attempts, 5);
@@ -45,7 +45,7 @@ theme = "light"
 fn test_partial_config_from_file() {
     let dir = tempdir().unwrap();
     let config_path = dir.path().join("partial_config.toml");
-    
+
     let config_content = r#"
 [broker]
 url = "redis://custom:6379/0"
@@ -53,9 +53,9 @@ url = "redis://custom:6379/0"
 [ui]
 refresh_interval = 500
 "#;
-    
+
     fs::write(&config_path, config_content).unwrap();
-    
+
     // This should fail because required fields are missing
     let result = Config::from_file(config_path);
     assert!(result.is_err());
@@ -65,11 +65,11 @@ refresh_interval = 500
 fn test_invalid_config_file() {
     let dir = tempdir().unwrap();
     let config_path = dir.path().join("invalid_config.toml");
-    
+
     let config_content = "invalid toml content {{";
-    
+
     fs::write(&config_path, config_content).unwrap();
-    
+
     let result = Config::from_file(config_path);
     assert!(result.is_err());
 }
@@ -94,10 +94,10 @@ fn test_config_serialization() {
             theme: "custom".to_string(),
         },
     };
-    
+
     let toml_str = toml::to_string(&config).unwrap();
     let deserialized: Config = toml::from_str(&toml_str).unwrap();
-    
+
     assert_eq!(config.broker.url, deserialized.broker.url);
     assert_eq!(config.broker.timeout, deserialized.broker.timeout);
     assert_eq!(config.ui.refresh_interval, deserialized.ui.refresh_interval);

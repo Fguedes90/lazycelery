@@ -1,9 +1,9 @@
-pub mod redis;
 pub mod amqp;
+pub mod redis;
 
-use async_trait::async_trait;
-use crate::models::{Worker, Task, Queue};
 use crate::error::BrokerError;
+use crate::models::{Queue, Task, Worker};
+use async_trait::async_trait;
 
 #[async_trait]
 #[allow(dead_code)]

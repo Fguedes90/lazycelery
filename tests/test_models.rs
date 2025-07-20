@@ -1,5 +1,5 @@
-use lazycelery::models::{Worker, WorkerStatus, Task, TaskStatus, Queue};
 use chrono::Utc;
+use lazycelery::models::{Queue, Task, TaskStatus, Worker, WorkerStatus};
 
 #[test]
 fn test_worker_creation() {
@@ -56,7 +56,7 @@ fn test_worker_serialization() {
 
     let json = serde_json::to_string(&worker).unwrap();
     let deserialized: Worker = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(worker.hostname, deserialized.hostname);
     assert_eq!(worker.processed, deserialized.processed);
 }
@@ -116,7 +116,7 @@ fn test_task_serialization() {
 
     let json = serde_json::to_string(&task).unwrap();
     let deserialized: Task = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(task.id, deserialized.id);
     assert_eq!(task.status, deserialized.status);
     assert_eq!(task.traceback, deserialized.traceback);
@@ -158,7 +158,7 @@ fn test_queue_serialization() {
 
     let json = serde_json::to_string(&queue).unwrap();
     let deserialized: Queue = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(queue.name, deserialized.name);
     assert_eq!(queue.length, deserialized.length);
     assert_eq!(queue.consumers, deserialized.consumers);

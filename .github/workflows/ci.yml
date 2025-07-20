@@ -157,8 +157,8 @@ jobs:
         # Install cargo-audit if not cached
         cargo install cargo-audit --locked
         
-        # Run security audit
-        if ! cargo audit --locked; then
+        # Run security audit (cargo audit doesn't support --locked flag)
+        if ! cargo audit; then
           echo "❌ Security audit failed"
           exit 1
         fi

@@ -222,15 +222,17 @@ mod integration_tests {
             eprintln!("DEBUG: Task ID: {}, Status: {:?}", task.id, task.status);
         }
 
-        // Should parse our test tasks (real implementation)
+        // Verify that we can find the tasks we just created
+        let our_tasks: Vec<_> = tasks.iter().filter(|t| t.id.starts_with("unique-test-task")).collect();
         assert!(
-            tasks.len() >= 2,
-            "Should find at least 2 tasks, found {}",
+            our_tasks.len() >= 2,
+            "Should find at least 2 of our test tasks, found {} (total tasks: {})", 
+            our_tasks.len(), 
             tasks.len()
         );
 
         // Find the successful task (real Celery metadata doesn't have task name)
-        let success_task = tasks.iter().find(|t| t.id == "unique-test-task-1").unwrap();
+        let success_task = tasks.iter().find(|t| t.id == "unique-test-task-1").expect("Should find success task");
         assert_eq!(success_task.status, TaskStatus::Success);
         assert_eq!(success_task.worker, None); // Real Celery metadata doesn't include worker hostname
                                                // Result pode ter aspas duplas extras devido ao JSON encoding
@@ -246,7 +248,7 @@ mod integration_tests {
         );
 
         // Find the failed task
-        let failed_task = tasks.iter().find(|t| t.id == "unique-test-task-2").unwrap();
+        let failed_task = tasks.iter().find(|t| t.id == "unique-test-task-2").expect("Should find failed task");
         assert_eq!(failed_task.status, TaskStatus::Failure);
         assert_eq!(failed_task.worker, None); // Real Celery metadata doesn't include worker hostname
         assert!(failed_task.traceback.is_some());

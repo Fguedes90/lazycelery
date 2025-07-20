@@ -9,6 +9,12 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  # Aggressive cargo optimizations to avoid re-downloading crates
+  CARGO_NET_RETRY: 10
+  CARGO_INCREMENTAL: 1
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  # Use sparse registry for faster index updates
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
   # Combine quick checks into one job for faster feedback
@@ -18,37 +24,50 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install mise
+    - name: Setup aggressive Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        # Cache everything aggressively
+        shared-key: "quality-checks"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+    
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Install Rust components
+    - name: Install Rust components (cached)
       run: |
         rustup component add clippy rustfmt
     
-    - name: Check Cargo.toml format
+    - name: Cache cargo check
       run: |
-        if ! cargo check --quiet; then
+        # Use cargo check with cache optimization
+        if ! cargo check --locked; then
           echo "❌ Cargo check failed"
           exit 1
         fi
         echo "✅ Cargo check passed"
     
-    - name: Check formatting
+    - name: Check formatting (fast)
       run: |
-        if ! mise run fmt -- --check; then
+        if ! cargo fmt --all --check; then
           echo "❌ Code is not formatted correctly"
-          echo "Run 'mise run fmt' to fix formatting"
+          echo "Run 'cargo fmt' to fix formatting"
           exit 1
         fi
         echo "✅ Code formatting is correct"
     
-    - name: Run clippy
+    - name: Run clippy (cached)
       run: |
-        if ! mise run lint; then
+        if ! cargo clippy --locked --all-targets --all-features -- -D warnings; then
           echo "❌ Linting failed"
           exit 1
         fi
@@ -64,35 +83,47 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 3
+          --health-interval 3s
+          --health-timeout 2s
+          --health-retries 2
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Rust cache
+    - name: Setup super aggressive Rust cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: "test-cache"
+        # Maximum caching for tests
+        shared-key: "test-deps"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        # Cache all targets
+        cache-targets: "true"
+        cache-all-crates: "true"
     
-    - name: Install mise
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Install Redis CLI (cached)
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y redis-tools
+    - name: Cache APT packages
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: redis-tools
+        version: 1.0
     
-    - name: Run tests in parallel
+    - name: Run tests with maximum optimization
       run: |
-        echo "Running tests with optimizations..."
-        # Run tests in parallel with release mode for faster execution
-        if ! cargo test --release --jobs $(nproc); then
+        echo "Running tests with cache optimization..."
+        # Use locked deps to avoid re-downloading
+        if ! cargo test --locked --release --jobs $(nproc); then
           echo "❌ Tests failed"
           exit 1
         fi
@@ -104,21 +135,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Rust cache
+    - name: Setup aggressive security cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: "security-cache"
+        shared-key: "security-audit"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     
-    - name: Install mise
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Security audit
+    - name: Security audit (using locked deps)
       run: |
-        if ! mise run audit; then
+        if ! cargo audit --locked; then
           echo "❌ Security audit failed"
           exit 1
         fi
@@ -135,23 +171,32 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Rust cache
+    - name: Setup maximum build cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: "build-${{ matrix.os }}"
+        shared-key: "build-${{ matrix.os }}"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        cache-targets: "true"
+        cache-all-crates: "true"
     
-    - name: Install mise
+    - name: Install mise (cached)
       uses: jdx/mise-action@v2
       with:
         install: true
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Build release (optimized)
+    - name: Build release with maximum cache optimization
       run: |
         echo "Building on ${{ matrix.os }}"
-        # Use parallel compilation
-        cargo build --release --jobs $(nproc || echo 4)
+        # Use locked deps and parallel compilation
+        cargo build --locked --release --jobs $(nproc || echo 4)
         echo "✅ Build successful on ${{ matrix.os }}"
     
     - name: Test binary (Unix)

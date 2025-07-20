@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/fguedes90/lazycelery/workflows/CI/badge.svg)](https://github.com/fguedes90/lazycelery/actions/workflows/ci.yml)
 [![Release](https://github.com/fguedes90/lazycelery/workflows/Release/badge.svg)](https://github.com/fguedes90/lazycelery/releases)
-[![Security Audit](https://github.com/fguedes90/lazycelery/workflows/Security%20Audit/badge.svg)](https://github.com/fguedes90/lazycelery/actions/workflows/security-audit.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/lazycelery.svg)](https://crates.io/crates/lazycelery)
 

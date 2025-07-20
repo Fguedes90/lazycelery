@@ -1,0 +1,18 @@
+# LazyCelery Configuration Example
+
+[broker]
+# Redis broker URL
+url = "redis://localhost:6379/0"
+
+# Connection timeout in seconds
+timeout = 30
+
+# Number of retry attempts for failed connections
+retry_attempts = 3
+
+[ui]
+# Data refresh interval in milliseconds
+refresh_interval = 1000
+
+# UI theme (currently only "dark" is supported)
+theme = "dark"

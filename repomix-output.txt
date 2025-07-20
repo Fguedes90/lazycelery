@@ -1,0 +1,2916 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+The content has been processed where line numbers have been added.
+
+================================================================
+File Summary
+================================================================
+
+Purpose:
+--------
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+File Format:
+------------
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  a. A separator line (================)
+  b. The file path (File: path/to/file)
+  c. Another separator line
+  d. The full contents of the file
+  e. A blank line
+
+Usage Guidelines:
+-----------------
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+Notes:
+------
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/**/*.rs, Cargo.toml, Cargo.lock, README.md, CLAUDE.md, code-style-guide.md, specs/**/*.md, examples/*.toml
+- Files matching these patterns are excluded: target/, *.log, *.tmp, *.swp, *.bak, repomix-output.txt, .git/, .idea/, .vscode/, tests/, benches/, *.pyc, __pycache__/, .env, .env.*, node_modules/, dist/, build/, *.so, *.dylib, *.dll, *.exe, .DS_Store, Thumbs.db, *.lock, !Cargo.lock
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Line numbers have been added to the beginning of each line
+- Files are sorted by Git change count (files with more changes are at the bottom)
+
+
+================================================================
+Directory Structure
+================================================================
+examples/
+  config.toml
+specs/
+  future-features.md
+  mvp.md
+  original-spec.md
+  README.md
+src/
+  broker/
+    amqp.rs
+    mod.rs
+    redis.rs
+  models/
+    mod.rs
+    queue.rs
+    task.rs
+    worker.rs
+  ui/
+    widgets/
+      mod.rs
+      queues.rs
+      tasks.rs
+      workers.rs
+    events.rs
+    mod.rs
+  utils/
+    formatting.rs
+    mod.rs
+  app.rs
+  config.rs
+  error.rs
+  lib.rs
+  main.rs
+Cargo.toml
+CLAUDE.md
+code-style-guide.md
+README.md
+
+================================================================
+Files
+================================================================
+
+================
+File: examples/config.toml
+================
+ 1: # LazyCelery Configuration Example
+ 2: 
+ 3: [broker]
+ 4: # Redis broker URL
+ 5: url = "redis://localhost:6379/0"
+ 6: 
+ 7: # Connection timeout in seconds
+ 8: timeout = 30
+ 9: 
+10: # Number of retry attempts for failed connections
+11: retry_attempts = 3
+12: 
+13: [ui]
+14: # Data refresh interval in milliseconds
+15: refresh_interval = 1000
+16: 
+17: # UI theme (currently only "dark" is supported)
+18: theme = "dark"
+
+================
+File: specs/future-features.md
+================
+  1: # LazyCelery - Future Features
+  2: 
+  3: This document outlines features planned for implementation after the MVP is complete and stable.
+  4: 
+  5: ## Phase 1: Enhanced Monitoring (Post-MVP)
+  6: 
+  7: ### Advanced Worker Management
+  8: - Worker control (start/stop/restart) with proper permissions
+  9: - Worker pool scaling controls
+ 10: - Worker resource monitoring (CPU, memory)
+ 11: - Worker heartbeat visualization
+ 12: - Historical worker performance data
+ 13: 
+ 14: ### Enhanced Queue Features
+ 15: - Priority queue visualization
+ 16: - Queue routing visualization
+ 17: - Dead letter queue support
+ 18: - Queue performance analytics
+ 19: - Bulk message operations
+ 20: 
+ 21: ### Task Enhancements
+ 22: - Task dependency visualization (chains, groups, chords)
+ 23: - Task result backend support
+ 24: - Bulk task operations
+ 25: - Task scheduling preview (for Celery Beat)
+ 26: - Export task data (CSV, JSON)
+ 27: 
+ 28: ## Phase 2: Debugging & Analysis Tools
+ 29: 
+ 30: ### Basic Debugging
+ 31: - Task execution timeline
+ 32: - Parent-child task relationships
+ 33: - Basic error grouping
+ 34: - Task replay functionality
+ 35: - Enhanced search (regex, date ranges)
+ 36: 
+ 37: ### Performance Analysis
+ 38: - Task duration heatmaps
+ 39: - Worker load distribution
+ 40: - Queue throughput graphs
+ 41: - SLA monitoring
+ 42: - Performance trends over time
+ 43: 
+ 44: ### Integration Features
+ 45: - Flower API compatibility
+ 46: - Prometheus metrics export
+ 47: - Webhook notifications
+ 48: - REST API for external tools
+ 49: 
+ 50: ## Phase 3: Advanced Features
+ 51: 
+ 52: ### Distributed Tracing (If Needed)
+ 53: - OpenTelemetry integration
+ 54: - Basic span visualization
+ 55: - Cross-service correlation
+ 56: - Trace sampling
+ 57: 
+ 58: ### Advanced Error Analysis
+ 59: - Error pattern detection
+ 60: - Similar error clustering
+ 61: - Error frequency trends
+ 62: - Root cause suggestions
+ 63: 
+ 64: ### Multi-Environment Support
+ 65: - Multiple broker connections
+ 66: - Environment switching
+ 67: - Cluster view
+ 68: - Cross-environment task search
+ 69: 
+ 70: ## Phase 4: Enterprise Features
+ 71: 
+ 72: ### Security & Compliance
+ 73: - Role-based access control
+ 74: - Audit logging
+ 75: - Data masking for sensitive info
+ 76: - Compliance reporting
+ 77: 
+ 78: ### Automation
+ 79: - Alert rules
+ 80: - Auto-retry policies
+ 81: - Task routing rules
+ 82: - Scheduled reports
+ 83: 
+ 84: ### Advanced UI
+ 85: - Web UI option
+ 86: - Custom dashboards
+ 87: - Plugin system
+ 88: - Theme marketplace
+ 89: 
+ 90: ## Technical Enhancements
+ 91: 
+ 92: ### Performance Optimizations
+ 93: - Lazy loading for large datasets
+ 94: - Caching layer
+ 95: - Batch operations
+ 96: - Background data sync
+ 97: 
+ 98: ### Platform Support
+ 99: - Docker image
+100: - Homebrew formula
+101: - Package managers (apt, yum)
+102: - Windows installer
+103: 
+104: ### Developer Experience
+105: - Plugin API
+106: - Custom metric collectors
+107: - Extension marketplace
+108: - Configuration templates
+109: 
+110: ## Evaluation Criteria
+111: 
+112: Before implementing any future feature:
+113: 1. Is there clear user demand?
+114: 2. Does it align with the core mission?
+115: 3. Can it be implemented without compromising performance?
+116: 4. Is the complexity justified by the value?
+117: 5. Can it be made optional/plugin-based?
+118: 
+119: ## Implementation Priority
+120: 
+121: Features should be prioritized based on:
+122: - User feedback and requests
+123: - Ease of implementation
+124: - Impact on existing users
+125: - Performance implications
+126: - Maintenance burden
+127: 
+128: ## Notes
+129: 
+130: - Each feature should be implemented as a separate module when possible
+131: - Performance impact must be measured before merging
+132: - Documentation must be updated with each new feature
+133: - Consider feature flags for experimental features
+134: - Maintain backward compatibility
+
+================
+File: specs/mvp.md
+================
+  1: # LazyCelery MVP Specification
+  2: 
+  3: ## Overview
+  4: 
+  5: LazyCelery is a terminal-based user interface (TUI) for monitoring and managing Celery workers and tasks, inspired by lazydocker and lazygit. Written in Rust for performance, it provides real-time monitoring and basic task management for Celery deployments.
+  6: 
+  7: ## Goals
+  8: 
+  9: - **Simplify Celery Monitoring**: Intuitive, keyboard-driven interface for monitoring Celery
+ 10: - **Real-time Updates**: Live updates of task execution and worker status
+ 11: - **Minimal Dependencies**: Single binary that connects directly to Redis/RabbitMQ
+ 12: - **Performance**: Fast and responsive UI
+ 13: 
+ 14: ## MVP Features
+ 15: 
+ 16: ### 1. Worker Monitoring
+ 17: - List active workers with status (online/offline)
+ 18: - Display worker configuration (concurrency, queues)
+ 19: - Show basic statistics (processed, failed, active tasks)
+ 20: - View worker logs
+ 21: 
+ 22: ### 2. Queue Monitoring
+ 23: - Display queues with message counts
+ 24: - Show consumption rates
+ 25: - Basic queue actions (purge with confirmation)
+ 26: 
+ 27: ### 3. Task Management
+ 28: - Real-time task list with status (pending/active/success/failure)
+ 29: - Task details view (name, args, kwargs, result, traceback)
+ 30: - Search and filter tasks
+ 31: - Retry failed tasks
+ 32: - Revoke running tasks
+ 33: 
+ 34: ### 4. Basic Metrics
+ 35: - Task success/failure rates
+ 36: - Queue lengths over time
+ 37: - Worker utilization
+ 38: - Task execution duration
+ 39: 
+ 40: ## UI Design
+ 41: 
+ 42: ### Simple Layout
+ 43: ```
+ 44: ┌─────────────────────────────────────────────────────────────┐
+ 45: │ LazyCelery v0.1.0          [W]orkers [Q]ueues [T]asks [?]  │
+ 46: ├─────────────────┬───────────────────────────────────────────┤
+ 47: │ Workers (3)     │ Worker: celery@worker-1                   │
+ 48: │ ● worker-1      │ Status: Online                            │
+ 49: │ ● worker-2      │ Tasks: 2/4 active                         │
+ 50: │ ○ worker-3      │ Processed: 1,523 (12 failed)              │
+ 51: │                 │                                           │
+ 52: │ Queues (2)      │ Recent Tasks:                             │
+ 53: │ default   125   │ [SUCCESS] send_email                      │
+ 54: │ priority   12   │ [ACTIVE]  process_image (00:02:15)        │
+ 55: │                 │ [FAILED]  calculate_report                │
+ 56: │                 │                                           │
+ 57: │ [↑↓] Navigate   │ [Enter] Details  [r] Retry  [x] Revoke   │
+ 58: └─────────────────┴───────────────────────────────────────────┘
+ 59: │ > Task calculate_report[abc123] failed: ZeroDivisionError   │
+ 60: └──────────────────────────────────────────────────────────────┘
+ 61: ```
+ 62: 
+ 63: ### Navigation
+ 64: - Arrow keys or vim-style (hjkl) for navigation
+ 65: - Tab to switch between panels
+ 66: - Enter for details, Esc to go back
+ 67: - / for search
+ 68: - q to quit, ? for help
+ 69: 
+ 70: ## Technical Architecture
+ 71: 
+ 72: ### Core Components
+ 73: 
+ 74: 1. **Broker Connection**
+ 75:    - Redis client using `redis-rs`
+ 76:    - RabbitMQ client using `lapin`
+ 77:    - Basic connection pooling
+ 78: 
+ 79: 2. **Simple Data Models**
+ 80:    ```rust
+ 81:    pub struct Worker {
+ 82:        hostname: String,
+ 83:        status: WorkerStatus,
+ 84:        concurrency: u32,
+ 85:        queues: Vec<String>,
+ 86:        active_tasks: Vec<String>,
+ 87:        processed: u64,
+ 88:        failed: u64,
+ 89:    }
+ 90: 
+ 91:    pub struct Task {
+ 92:        id: String,
+ 93:        name: String,
+ 94:        args: String,  // JSON string
+ 95:        kwargs: String, // JSON string
+ 96:        status: TaskStatus,
+ 97:        worker: Option<String>,
+ 98:        timestamp: DateTime<Utc>,
+ 99:        result: Option<String>,
+100:        traceback: Option<String>,
+101:    }
+102: 
+103:    pub struct Queue {
+104:        name: String,
+105:        length: u64,
+106:        consumers: u32,
+107:    }
+108:    ```
+109: 
+110: 3. **TUI Framework**
+111:    - `ratatui` for UI
+112:    - `crossterm` for terminal control
+113:    - `tokio` for async operations
+114: 
+115: 4. **State Management**
+116:    - Simple app state with Arc<Mutex<>>
+117:    - Periodic refresh (configurable interval)
+118: 
+119: ## Implementation Plan
+120: 
+121: ### Phase 1: Foundation (Week 1-2)
+122: - Project setup and basic broker connections
+123: - Worker listing and status
+124: - Basic TUI layout
+125: 
+126: ### Phase 2: Core Features (Week 3-4)
+127: - Queue monitoring
+128: - Task listing with status
+129: - Task details view
+130: - Search functionality
+131: 
+132: ### Phase 3: Actions & Polish (Week 5-6)
+133: - Task retry/revoke
+134: - Basic metrics
+135: - Configuration file support
+136: - Error handling and stability
+137: 
+138: ## Configuration
+139: 
+140: ### CLI
+141: ```bash
+142: lazycelery --broker redis://localhost:6379/0
+143: lazycelery --broker amqp://localhost:5672//
+144: ```
+145: 
+146: ### Config File (Optional)
+147: ```toml
+148: [broker]
+149: url = "redis://localhost:6379/0"
+150: 
+151: [ui]
+152: refresh_interval = 1000  # ms
+153: theme = "dark"
+154: ```
+155: 
+156: ## Dependencies
+157: 
+158: ### Essential Crates Only
+159: - `ratatui` - TUI framework
+160: - `crossterm` - Terminal manipulation
+161: - `tokio` - Async runtime
+162: - `redis` - Redis client
+163: - `lapin` - RabbitMQ client
+164: - `serde` / `serde_json` - JSON handling
+165: - `chrono` - Timestamps
+166: - `clap` - CLI args
+167: 
+168: ## Success Criteria
+169: 
+170: - Single binary under 10MB
+171: - Sub-100ms UI response
+172: - Works with 1000+ tasks
+173: - Zero configuration for basic use
+174: - Clear, intuitive interface
+
+================
+File: specs/original-spec.md
+================
+  1: # LazyCelery - Original Specification (Archive)
+  2: 
+  3: **Note**: This is the original specification kept for reference. See `mvp.md` for the current development target and `future-features.md` for planned enhancements.
+  4: 
+  5: ---
+  6: 
+  7: # LazyCelery - Terminal UI for Celery
+  8: 
+  9: ## Overview
+ 10: 
+ 11: LazyCelery is a terminal-based user interface (TUI) for monitoring and managing Celery workers and tasks, inspired by the intuitive interfaces of lazydocker and lazygit. Written in Rust for performance and reliability, it provides real-time monitoring, task management, and debugging capabilities for Celery deployments.
+ 12: 
+ 13: ## Goals
+ 14: 
+ 15: - **Simplify Celery Monitoring**: Provide an intuitive, keyboard-driven interface for monitoring Celery workers, queues, and tasks
+ 16: - **Real-time Updates**: Display live updates of task execution, worker status, and queue metrics
+ 17: - **Minimal Dependencies**: Lightweight tool that connects directly to Redis/RabbitMQ brokers
+ 18: - **Cross-platform**: Support Linux, macOS, and Windows environments
+ 19: - **Performance**: Fast and responsive UI even with thousands of tasks
+ 20: 
+ 21: ## Target Users
+ 22: 
+ 23: - DevOps engineers monitoring production Celery deployments
+ 24: - Developers debugging Celery task execution
+ 25: - System administrators managing worker pools
+ 26: - Anyone who needs quick visibility into Celery operations
+ 27: 
+ 28: ## Core Features
+ 29: 
+ 30: ### 1. Worker Management
+ 31: - List all active workers with status (online/offline/heartbeat)
+ 32: - Display worker configuration (concurrency, pool type, queues)
+ 33: - Show worker statistics (processed tasks, active tasks, reserved tasks)
+ 34: - Start/stop/restart workers (if permissions allow)
+ 35: - View worker logs in real-time
+ 36: - Filter workers by hostname, queue, or status
+ 37: 
+ 38: ### 2. Queue Monitoring
+ 39: - Display all queues with message counts
+ 40: - Show queue consumption rates
+ 41: - Priority queue support
+ 42: - Queue purging capabilities
+ 43: - Message inspection (peek at messages without consuming)
+ 44: - Queue routing visualization
+ 45: 
+ 46: ### 3. Task Management
+ 47: - Real-time task list with status (pending/active/success/failure/retry)
+ 48: - Task details view (args, kwargs, result, traceback)
+ 49: - Task timeline/history
+ 50: - Retry failed tasks
+ 51: - Revoke/terminate running tasks
+ 52: - Task search and filtering (by name, status, worker, time range)
+ 53: - Task result inspection
+ 54: 
+ 55: ### 4. Performance Metrics
+ 56: - Task execution time statistics
+ 57: - Success/failure rates
+ 58: - Queue backlog trends
+ 59: - Worker utilization
+ 60: - Memory usage per worker
+ 61: - Broker connection health
+ 62: 
+ 63: ### 5. Configuration & Settings
+ 64: - Support for multiple broker connections
+ 65: - Customizable refresh intervals
+ 66: - Color themes (including colorblind-friendly options)
+ 67: - Keyboard shortcut customization
+ 68: - Export configurations
+ 69: 
+ 70: ### 6. Debugging & Observability
+ 71: 
+ 72: #### Task Execution Tracing
+ 73: - **Task Chain Visualization**: Display parent-child relationships and task dependencies
+ 74: - **Execution Timeline**: Visual timeline showing when tasks started, retried, and completed
+ 75: - **Call Stack View**: Show the complete call chain that triggered a task
+ 76: - **Task Flow Diagram**: Interactive graph showing task execution flow
+ 77: - **Breadcrumb Trail**: Track the sequence of events leading to task execution
+ 78: 
+ 79: #### Error Analysis
+ 80: - **Error Inspector**: Detailed view of exceptions with full traceback
+ 81: - **Error Patterns**: Identify recurring error patterns across tasks
+ 82: - **Root Cause Analysis**: Trace errors back to their origin in task chains
+ 83: - **Error Heatmap**: Visualize which tasks/workers are failing most frequently
+ 84: - **Smart Error Grouping**: Group similar errors together for easier analysis
+ 85: 
+ 86: #### Advanced Debugging Tools
+ 87: - **Task Replay**: Re-execute failed tasks with the same arguments for debugging
+ 88: - **Breakpoint System**: Set conditional breakpoints on task execution
+ 89: - **Variable Inspector**: Examine task arguments, kwargs, and intermediate results
+ 90: - **Memory Profiler**: Track memory usage during task execution
+ 91: - **Performance Profiler**: Identify bottlenecks in task execution
+ 92: 
+ 93: #### Distributed Tracing
+ 94: - **OpenTelemetry Integration**: Full support for distributed tracing standards
+ 95: - **Trace Context Propagation**: Follow requests across multiple services
+ 96: - **Span Visualization**: See detailed timing for each operation within a task
+ 97: - **Cross-Service Correlation**: Link Celery tasks with HTTP requests, database queries
+ 98: - **Custom Instrumentation Points**: Add custom trace points in task code
+ 99: 
+100: #### Observability Features
+101: - **Real-time Metrics Dashboard**: CPU, memory, network usage per worker/task
+102: - **Anomaly Detection**: Alert on unusual patterns (sudden spike in failures, slow tasks)
+103: - **Task Execution Heatmap**: Visualize task distribution across time and workers
+104: - **Dependency Graph**: Show which tasks depend on external services
+105: - **SLA Monitoring**: Track if tasks are meeting performance requirements
+106: 
+107: ### 7. Task Relationship & Flow Analysis
+108: 
+109: #### Task Dependencies
+110: - **Dependency Tree View**: Visualize parent-child task relationships
+111: - **Canvas/Chain/Group Detection**: Automatically detect and display Celery primitives
+112: - **Critical Path Analysis**: Identify the longest execution path in task chains
+113: - **Circular Dependency Detection**: Warn about potential infinite loops
+114: 
+115: #### Execution Context
+116: - **Request Tracing**: Link tasks to the original HTTP request or trigger
+117: - **User Journey Tracking**: Follow a user's actions through multiple tasks
+118: - **Business Transaction View**: Group related tasks by business operation
+119: - **Event Sourcing Integration**: Show events that triggered task execution
+120: 
+121: ## UI Design
+122: 
+123: ### Layout (Inspired by lazydocker/lazygit)
+124: 
+125: #### Main Dashboard View
+126: ```
+127: ┌─────────────────────────────────────────────────────────────────┐
+128: │ LazyCelery v0.1.0              [Q]ueues [W]orkers [T]asks [?]  │
+129: ├───────────────────┬─────────────────────────────────────────────┤
+130: │ Workers (4)       │ Worker Details: celery@worker-1             │
+131: │ ┌───────────────┐ │ ─────────────────────────────────────────── │
+132: │ │▸ worker-1 ●   │ │ Status: Online                              │
+133: │ │  worker-2 ●   │ │ Pool: prefork (4 processes)                 │
+134: │ │  worker-3 ●   │ │ Queues: default, priority                   │
+135: │ │  worker-4 ○   │ │ Active Tasks: 2/4                           │
+136: │ └───────────────┘ │ Processed: 1,523                            │
+137: │                   │ Failed: 12                                  │
+138: │ Queues (3)        │ Success Rate: 99.2%                         │
+139: │ ┌───────────────┐ │                                             │
+140: │ │ default   125 │ ├─────────────────────────────────────────────┤
+141: │ │ priority   12 │ │ Active Tasks                                │
+142: │ │ celery      0 │ │ ─────────────────────────────────────────── │
+143: │ └───────────────┘ │ ID      Task              Status  Duration  │
+144: │                   │ abc123  send_email        ACTIVE  00:02:15  │
+145: │ [Enter] Details   │ def456  process_image     ACTIVE  00:00:45  │
+146: │ [r] Refresh       │                                             │
+147: │ [/] Search        │ [Space] Select  [r] Retry  [x] Revoke      │
+148: └───────────────────┴─────────────────────────────────────────────┘
+149: │ Logs │ 2024-01-10 10:23:45 [INFO] Task send_email started    │
+150: │      │ 2024-01-10 10:23:44 [INFO] Received task abc123      │
+151: └──────┴──────────────────────────────────────────────────────┘
+152: ```
+153: 
+154: #### Debug View - Task Execution Flow
+155: ```
+156: ┌─────────────────────────────────────────────────────────────────┐
+157: │ LazyCelery v0.1.0 - Debug Mode      [D]ebug [T]race [E]rrors   │
+158: ├───────────────────┬─────────────────────────────────────────────┤
+159: │ Task Flow         │ Task Details: process_order[abc123]         │
+160: │ ┌───────────────┐ │ ─────────────────────────────────────────── │
+161: │ │ HTTP Request  │ │ Status: FAILED                              │
+162: │ │      ↓        │ │ Started: 2024-01-10 10:23:45               │
+163: │ │ validate_order│ │ Failed: 2024-01-10 10:23:47                │
+164: │ │      ↓        │ │ Duration: 2.15s                             │
+165: │ │ process_order │ │ Retries: 2/3                                │
+166: │ │    ↓   ↓      │ │                                             │
+167: │ │ email  charge │ │ Exception:                                  │
+168: │ │         ↓     │ │ ─────────────────────────────────────────── │
+169: │ │      FAILED ❌ │ │ ConnectionError: Payment gateway timeout    │
+170: │ └───────────────┘ │                                             │
+171: │                   │ Traceback:                                  │
+172: │ Parent Chain:     │ File "tasks.py", line 45, in charge_card    │
+173: │ ┌───────────────┐ │   response = gateway.charge(amount, card)   │
+174: │ │ → HTTP /order │ │ File "gateway.py", line 123, in charge      │
+175: │ │ → celery.chain│ │   raise ConnectionError("Timeout")          │
+176: │ │ → process_task│ │                                             │
+177: │ └───────────────┘ │ [i] Inspect Variables [r] Replay [t] Trace │
+178: └───────────────────┴─────────────────────────────────────────────┘
+179: │ Timeline │ 10:23:45 ──●────●────●────●──X  10:23:47        │
+180: │          │   Start   Valid  Process Email Fail              │
+181: └──────────┴──────────────────────────────────────────────────┘
+182: ```
+183: 
+184: #### Trace View - Distributed Tracing
+185: ```
+186: ┌─────────────────────────────────────────────────────────────────┐
+187: │ LazyCelery v0.1.0 - Trace View     [S]pans [M]etrics [L]ogs    │
+188: ├─────────────────────────────────────────────────────────────────┤
+189: │ Trace ID: 4bf92f3577b34da6a3ce929d0e0e4736                      │
+190: │ Total Duration: 3.45s                                           │
+191: │                                                                 │
+192: │ Service    Operation              Duration   Status             │
+193: │ ─────────────────────────────────────────────────────────────── │
+194: │ ▼ api      POST /api/order        3.45s     ✓                  │
+195: │   ▼ celery validate_order         0.12s     ✓                  │
+196: │     └─ db  SELECT * FROM users    0.05s     ✓                  │
+197: │   ▼ celery process_order          2.98s     ❌                 │
+198: │     ├─ celery send_email          0.45s     ✓                  │
+199: │     │  └─ smtp connect            0.38s     ✓                  │
+200: │     └─ celery charge_card         2.15s     ❌ Timeout         │
+201: │        └─ http payment.gateway    2.15s     ❌ 504             │
+202: │                                                                 │
+203: │ Span Details: charge_card                                       │
+204: │ ─────────────────────────────────────────────────────────────── │
+205: │ Tags:                                                           │
+206: │   customer.id: 12345                                            │
+207: │   payment.amount: 99.99                                         │
+208: │   payment.currency: USD                                         │
+209: │   error: true                                                   │
+210: │   error.type: ConnectionError                                   │
+211: └─────────────────────────────────────────────────────────────────┘
+212: ```
+213: 
+214: ### Navigation
+215: - **Vim-style keybindings**: j/k for up/down, h/l for left/right panels
+216: - **Tab navigation**: Quick switch between Workers/Queues/Tasks views
+217: - **Search mode**: / to search, n/N for next/previous
+218: - **Context menus**: Right-click or Space for actions
+219: - **Global shortcuts**: q to quit, ? for help, r to refresh
+220: 
+221: ## Technical Architecture
+222: 
+223: ### Core Components (Rust)
+224: 
+225: 1. **Broker Connection Layer**
+226:    - Redis client using `redis-rs`
+227:    - RabbitMQ client using `lapin` 
+228:    - Connection pooling and retry logic
+229:    - Multi-broker support
+230: 
+231: 2. **Data Models**
+232:    ```rust
+233:    pub struct Worker {
+234:        hostname: String,
+235:        status: WorkerStatus,
+236:        pool: PoolType,
+237:        concurrency: u32,
+238:        queues: Vec<String>,
+239:        active_tasks: Vec<Task>,
+240:        stats: WorkerStats,
+241:        system_metrics: SystemMetrics,
+242:    }
+243: 
+244:    pub struct Task {
+245:        id: String,
+246:        name: String,
+247:        args: Vec<serde_json::Value>,
+248:        kwargs: HashMap<String, serde_json::Value>,
+249:        status: TaskStatus,
+250:        worker: Option<String>,
+251:        timestamp: DateTime<Utc>,
+252:        result: Option<TaskResult>,
+253:        parent_id: Option<String>,
+254:        children_ids: Vec<String>,
+255:        trace_context: Option<TraceContext>,
+256:        error_info: Option<ErrorInfo>,
+257:        execution_timeline: Vec<TimelineEvent>,
+258:    }
+259: 
+260:    pub struct Queue {
+261:        name: String,
+262:        messages: u64,
+263:        consumers: u32,
+264:        routing_key: Option<String>,
+265:        message_rate: MessageRate,
+266:    }
+267: 
+268:    pub struct TraceContext {
+269:        trace_id: String,
+270:        span_id: String,
+271:        parent_span_id: Option<String>,
+272:        baggage: HashMap<String, String>,
+273:        start_time: DateTime<Utc>,
+274:        duration: Duration,
+275:        spans: Vec<Span>,
+276:    }
+277: 
+278:    pub struct ErrorInfo {
+279:        exception_type: String,
+280:        message: String,
+281:        traceback: Vec<TracebackFrame>,
+282:        local_vars: HashMap<String, serde_json::Value>,
+283:        system_state: SystemSnapshot,
+284:        similar_errors: Vec<String>,
+285:    }
+286: 
+287:    pub struct TaskFlow {
+288:        root_task_id: String,
+289:        nodes: HashMap<String, TaskNode>,
+290:        edges: Vec<TaskEdge>,
+291:        execution_order: Vec<String>,
+292:        critical_path: Vec<String>,
+293:    }
+294:    ```
+295: 
+296: 3. **TUI Framework**
+297:    - Built on `ratatui` (successor to tui-rs)
+298:    - Crossterm for terminal manipulation
+299:    - Event-driven architecture
+300:    - Async runtime with Tokio
+301: 
+302: 4. **State Management**
+303:    - Centralized app state with Arc<Mutex<AppState>>
+304:    - Event bus for UI updates
+305:    - Background tasks for data fetching
+306: 
+307: 5. **Debugging & Observability Components**
+308:    - **Trace Collector**: Aggregates distributed traces from multiple sources
+309:    - **Error Analyzer**: Pattern matching and clustering for similar errors
+310:    - **Task Graph Builder**: Constructs real-time task dependency graphs
+311:    - **Metrics Aggregator**: Collects and calculates performance metrics
+312:    - **Timeline Reconstructor**: Builds execution timelines from events
+313:    - **Variable Inspector**: Safe serialization of task arguments and results
+314: 
+315: ### Data Flow
+316: 
+317: ```
+318: ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+319: │   Broker    │────▶│ Connection   │────▶│    State    │
+320: │(Redis/AMQP) │     │   Manager    │     │   Manager   │
+321: └─────────────┘     └──────────────┘     └─────────────┘
+322:                                                  │
+323:                     ┌──────────────┐             │
+324:                     │   Terminal   │◀────────────┘
+325:                     │      UI      │
+326:                     └──────────────┘
+327:                            │
+328:                     ┌──────────────┐
+329:                     │ User Input   │
+330:                     │   Handler    │
+331:                     └──────────────┘
+332: ```
+333: 
+334: ## Implementation Plan
+335: 
+336: ### Phase 1: Core Infrastructure (Weeks 1-2)
+337: - Set up Rust project structure
+338: - Implement broker connection layer
+339: - Create basic data models
+340: - Set up TUI framework with basic layout
+341: 
+342: ### Phase 2: Worker & Queue Features (Weeks 3-4)
+343: - Worker listing and details
+344: - Queue monitoring
+345: - Basic task display
+346: - Real-time updates
+347: 
+348: ### Phase 3: Task Management (Weeks 5-6)
+349: - Task details view
+350: - Task actions (retry, revoke)
+351: - Search and filtering
+352: - Task history
+353: 
+354: ### Phase 4: Advanced Features (Weeks 7-8)
+355: - Performance metrics
+356: - Log streaming
+357: - Configuration management
+358: - Export capabilities
+359: 
+360: ### Phase 5: Debugging & Observability (Weeks 9-10)
+361: - Task flow visualization
+362: - Error analysis and clustering
+363: - Distributed tracing integration
+364: - Variable inspection and replay
+365: - Anomaly detection
+366: 
+367: ### Phase 6: Polish & Testing (Weeks 11-12)
+368: - Error handling
+369: - Performance optimization
+370: - Documentation
+371: - Cross-platform testing
+372: 
+373: ## Dependencies
+374: 
+375: ### Rust Crates
+376: - `ratatui` - Terminal UI framework
+377: - `crossterm` - Terminal manipulation
+378: - `tokio` - Async runtime
+379: - `redis` - Redis client
+380: - `lapin` - RabbitMQ client
+381: - `serde` / `serde_json` - Serialization
+382: - `chrono` - Date/time handling
+383: - `clap` - CLI argument parsing
+384: - `config` - Configuration management
+385: - `tracing` - Logging framework
+386: - `opentelemetry` - Distributed tracing
+387: - `opentelemetry-otlp` - OTLP exporter
+388: - `petgraph` - Graph algorithms for task flows
+389: - `similar` - Text diffing for error comparison
+390: - `backtrace` - Capture stack traces
+391: - `sysinfo` - System metrics collection
+392: - `dashmap` - Concurrent hashmap for metrics
+393: - `regex` - Pattern matching for errors
+394: - `tantivy` - Full-text search for logs/errors
+395: 
+396: ### External Requirements
+397: - Rust 1.70+
+398: - Access to Celery broker (Redis/RabbitMQ)
+399: - Terminal with 256-color support
+400: 
+401: ## Configuration
+402: 
+403: ### CLI Arguments
+404: ```bash
+405: lazycelery --broker redis://localhost:6379/0
+406: lazycelery --broker amqp://guest:guest@localhost:5672//
+407: lazycelery --config ~/.config/lazycelery/config.toml
+408: ```
+409: 
+410: ### Configuration File (TOML)
+411: ```toml
+412: [broker]
+413: url = "redis://localhost:6379/0"
+414: timeout = 30
+415: retry_attempts = 3
+416: 
+417: [ui]
+418: theme = "dark"
+419: refresh_interval = 1000  # milliseconds
+420: show_timestamps = true
+421: 
+422: [keybindings]
+423: quit = "q"
+424: refresh = "r"
+425: search = "/"
+426: ```
+427: 
+428: ## Use Cases & Debugging Scenarios
+429: 
+430: ### Scenario 1: Production Issue - Task Chain Failure
+431: A user reports that their order isn't being processed. Using LazyCelery:
+432: 1. Search for the user's order ID across all tasks
+433: 2. View the task execution flow to see where it failed
+434: 3. Inspect the error details and local variables at failure point
+435: 4. Trace back through parent tasks to understand the context
+436: 5. Use task replay to reproduce the issue in a test environment
+437: 
+438: ### Scenario 2: Performance Degradation
+439: System is running slow during peak hours:
+440: 1. View the task execution heatmap to identify bottlenecks
+441: 2. Check worker utilization and memory usage
+442: 3. Analyze task duration trends over time
+443: 4. Identify tasks taking longer than SLA
+444: 5. Drill down into specific slow tasks to see distributed traces
+445: 
+446: ### Scenario 3: Intermittent Errors
+447: Random failures occurring across different workers:
+448: 1. Use error clustering to group similar failures
+449: 2. Identify patterns (specific workers, time of day, task types)
+450: 3. View system metrics at the time of failures
+451: 4. Correlate with external service health
+452: 5. Set up anomaly detection alerts for future occurrences
+453: 
+454: ### Scenario 4: Complex Business Flow Analysis
+455: Understanding how a multi-step business process executes:
+456: 1. View the complete task dependency graph
+457: 2. See the critical path through the workflow
+458: 3. Identify potential optimization opportunities
+459: 4. Track user journey from initial request to completion
+460: 5. Export flow diagram for documentation
+461: 
+462: ## Security Considerations
+463: 
+464: - No storage of broker credentials in plain text
+465: - Support for TLS connections
+466: - Read-only mode by default
+467: - Audit logging for destructive operations
+468: - Configurable permissions for task actions
+469: - Sanitization of sensitive data in debug views
+470: - Role-based access control for debugging features
+471: 
+472: ## Future Enhancements
+473: 
+474: - Flower API compatibility
+475: - Task dependency visualization
+476: - Multi-cluster support
+477: - Plugin system for custom monitors
+478: - HTTP API for integration
+479: - Mobile-responsive web UI
+480: - Celery Beat schedule monitoring
+481: - Task result backend support
+482: - Prometheus metrics export
+483: 
+484: ## Success Metrics
+485: 
+486: - Sub-100ms UI response time
+487: - Support for 10k+ tasks without performance degradation
+488: - 90% reduction in time to diagnose Celery issues
+489: - Zero-dependency installation (single binary)
+490: - Cross-platform compatibility
+491: 
+492: ## References
+493: 
+494: - [Celery Documentation](https://docs.celeryproject.org/)
+495: - [lazydocker](https://github.com/jesseduffield/lazydocker)
+496: - [lazygit](https://github.com/jesseduffield/lazygit)
+497: - [Ratatui Documentation](https://ratatui.rs/)
+
+================
+File: specs/README.md
+================
+ 1: # LazyCelery Specifications
+ 2: 
+ 3: This directory contains the specifications for the LazyCelery project, organized by development phase.
+ 4: 
+ 5: ## Structure
+ 6: 
+ 7: - **[mvp.md](./mvp.md)** - Minimum Viable Product specification
+ 8:   - Core features needed for a useful first release
+ 9:   - Focused on essential monitoring and management
+10:   - Target: 6-week development cycle
+11: 
+12: - **[future-features.md](./future-features.md)** - Post-MVP features
+13:   - Advanced monitoring and debugging tools
+14:   - Enterprise features
+15:   - Integration capabilities
+16:   - Organized in phases based on complexity and user value
+17: 
+18: ## Development Philosophy
+19: 
+20: 1. **Start Simple**: Build a solid foundation with the MVP
+21: 2. **User-Driven**: Add features based on real user feedback
+22: 3. **Performance First**: Never compromise core performance
+23: 4. **Optional Complexity**: Advanced features should be optional/plugins
+24: 
+25: ## Reading Order
+26: 
+27: 1. Start with `mvp.md` to understand the core product
+28: 2. Review `future-features.md` for the long-term vision
+29: 3. Check back here for updates as specs evolve
+30: 
+31: ## Contributing
+32: 
+33: When proposing new features:
+34: - Consider if it belongs in MVP or future features
+35: - Evaluate complexity vs. user value
+36: - Think about performance implications
+37: - Consider making it a plugin if possible
+
+================
+File: src/broker/amqp.rs
+================
+ 1: use async_trait::async_trait;
+ 2: use crate::broker::Broker;
+ 3: use crate::models::{Worker, Task, Queue};
+ 4: use crate::error::BrokerError;
+ 5: 
+ 6: pub struct AmqpBroker {
+ 7:     // Placeholder for AMQP connection
+ 8: }
+ 9: 
+10: #[async_trait]
+11: impl Broker for AmqpBroker {
+12:     async fn connect(_url: &str) -> Result<Self, BrokerError> {
+13:         Err(BrokerError::NotImplemented)
+14:     }
+15:     
+16:     async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError> {
+17:         Err(BrokerError::NotImplemented)
+18:     }
+19:     
+20:     async fn get_tasks(&self) -> Result<Vec<Task>, BrokerError> {
+21:         Err(BrokerError::NotImplemented)
+22:     }
+23:     
+24:     async fn get_queues(&self) -> Result<Vec<Queue>, BrokerError> {
+25:         Err(BrokerError::NotImplemented)
+26:     }
+27:     
+28:     async fn retry_task(&self, _task_id: &str) -> Result<(), BrokerError> {
+29:         Err(BrokerError::NotImplemented)
+30:     }
+31:     
+32:     async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
+33:         Err(BrokerError::NotImplemented)
+34:     }
+35: }
+
+================
+File: src/broker/mod.rs
+================
+ 1: pub mod redis;
+ 2: pub mod amqp;
+ 3: 
+ 4: use async_trait::async_trait;
+ 5: use crate::models::{Worker, Task, Queue};
+ 6: use crate::error::BrokerError;
+ 7: 
+ 8: #[async_trait]
+ 9: pub trait Broker: Send + Sync {
+10:     async fn connect(url: &str) -> Result<Self, BrokerError>
+11:     where
+12:         Self: Sized;
+13: 
+14:     async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError>;
+15:     async fn get_tasks(&self) -> Result<Vec<Task>, BrokerError>;
+16:     async fn get_queues(&self) -> Result<Vec<Queue>, BrokerError>;
+17:     async fn retry_task(&self, task_id: &str) -> Result<(), BrokerError>;
+18:     async fn revoke_task(&self, task_id: &str) -> Result<(), BrokerError>;
+19: }
+
+================
+File: src/broker/redis.rs
+================
+  1: use async_trait::async_trait;
+  2: use redis::aio::MultiplexedConnection;
+  3: use redis::{AsyncCommands, Client};
+  4: use crate::broker::Broker;
+  5: use crate::models::{Worker, WorkerStatus, Task, TaskStatus, Queue};
+  6: use crate::error::BrokerError;
+  7: use chrono::Utc;
+  8: use serde_json::Value;
+  9: 
+ 10: pub struct RedisBroker {
+ 11:     client: Client,
+ 12:     connection: MultiplexedConnection,
+ 13: }
+ 14: 
+ 15: impl RedisBroker {
+ 16:     async fn parse_workers(&self) -> Result<Vec<Worker>, BrokerError> {
+ 17:         let mut conn = self.connection.clone();
+ 18:         
+ 19:         // Get all worker keys
+ 20:         let _worker_keys: Vec<String> = conn
+ 21:             .keys("celery-task-meta-*")
+ 22:             .await
+ 23:             .map_err(|e| BrokerError::OperationError(e.to_string()))?;
+ 24:         
+ 25:         let mut workers = Vec::new();
+ 26:         
+ 27:         // For MVP, we'll create mock workers since Celery's worker
+ 28:         // representation in Redis is complex
+ 29:         workers.push(Worker {
+ 30:             hostname: "worker-1".to_string(),
+ 31:             status: WorkerStatus::Online,
+ 32:             concurrency: 4,
+ 33:             queues: vec!["default".to_string(), "priority".to_string()],
+ 34:             active_tasks: vec![],
+ 35:             processed: 1523,
+ 36:             failed: 12,
+ 37:         });
+ 38:         
+ 39:         Ok(workers)
+ 40:     }
+ 41:     
+ 42:     async fn parse_tasks(&self) -> Result<Vec<Task>, BrokerError> {
+ 43:         let mut conn = self.connection.clone();
+ 44:         
+ 45:         // Get task results from celery-task-meta-* keys
+ 46:         let task_keys: Vec<String> = conn
+ 47:             .keys("celery-task-meta-*")
+ 48:             .await
+ 49:             .map_err(|e| BrokerError::OperationError(e.to_string()))?;
+ 50:         
+ 51:         let mut tasks = Vec::new();
+ 52:         
+ 53:         for key in task_keys.iter().take(100) { // Limit to 100 for performance
+ 54:             if let Ok(data) = conn.get::<_, String>(key).await {
+ 55:                 if let Ok(task_data) = serde_json::from_str::<Value>(&data) {
+ 56:                     let task = Task {
+ 57:                         id: key.strip_prefix("celery-task-meta-")
+ 58:                             .unwrap_or("unknown")
+ 59:                             .to_string(),
+ 60:                         name: task_data["task"]
+ 61:                             .as_str()
+ 62:                             .unwrap_or("unknown")
+ 63:                             .to_string(),
+ 64:                         args: task_data["args"]
+ 65:                             .to_string(),
+ 66:                         kwargs: task_data["kwargs"]
+ 67:                             .to_string(),
+ 68:                         status: match task_data["status"].as_str() {
+ 69:                             Some("SUCCESS") => TaskStatus::Success,
+ 70:                             Some("FAILURE") => TaskStatus::Failure,
+ 71:                             Some("PENDING") => TaskStatus::Pending,
+ 72:                             Some("RETRY") => TaskStatus::Retry,
+ 73:                             Some("REVOKED") => TaskStatus::Revoked,
+ 74:                             _ => TaskStatus::Active,
+ 75:                         },
+ 76:                         worker: task_data["hostname"]
+ 77:                             .as_str()
+ 78:                             .map(|s| s.to_string()),
+ 79:                         timestamp: Utc::now(), // Would parse from task data
+ 80:                         result: task_data["result"]
+ 81:                             .as_str()
+ 82:                             .map(|s| s.to_string()),
+ 83:                         traceback: task_data["traceback"]
+ 84:                             .as_str()
+ 85:                             .map(|s| s.to_string()),
+ 86:                     };
+ 87:                     tasks.push(task);
+ 88:                 }
+ 89:             }
+ 90:         }
+ 91:         
+ 92:         Ok(tasks)
+ 93:     }
+ 94:     
+ 95:     async fn parse_queues(&self) -> Result<Vec<Queue>, BrokerError> {
+ 96:         let mut conn = self.connection.clone();
+ 97:         
+ 98:         // Common Celery queue names
+ 99:         let queue_names = vec!["celery", "default", "priority"];
+100:         let mut queues = Vec::new();
+101:         
+102:         for name in queue_names {
+103:             let length: u64 = conn
+104:                 .llen(name)
+105:                 .await
+106:                 .unwrap_or(0);
+107:             
+108:             queues.push(Queue {
+109:                 name: name.to_string(),
+110:                 length,
+111:                 consumers: 0, // Would need to parse from worker info
+112:             });
+113:         }
+114:         
+115:         Ok(queues)
+116:     }
+117: }
+118: 
+119: #[async_trait]
+120: impl Broker for RedisBroker {
+121:     async fn connect(url: &str) -> Result<Self, BrokerError> {
+122:         let client = Client::open(url)
+123:             .map_err(|e| BrokerError::InvalidUrl(e.to_string()))?;
+124:         
+125:         let connection = client
+126:             .get_multiplexed_tokio_connection()
+127:             .await
+128:             .map_err(|e| BrokerError::ConnectionError(e.to_string()))?;
+129:         
+130:         Ok(Self { client, connection })
+131:     }
+132:     
+133:     async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError> {
+134:         self.parse_workers().await
+135:     }
+136:     
+137:     async fn get_tasks(&self) -> Result<Vec<Task>, BrokerError> {
+138:         self.parse_tasks().await
+139:     }
+140:     
+141:     async fn get_queues(&self) -> Result<Vec<Queue>, BrokerError> {
+142:         self.parse_queues().await
+143:     }
+144:     
+145:     async fn retry_task(&self, _task_id: &str) -> Result<(), BrokerError> {
+146:         // In a real implementation, this would publish a new task message
+147:         // For MVP, we'll return not implemented
+148:         Err(BrokerError::NotImplemented)
+149:     }
+150:     
+151:     async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
+152:         // In a real implementation, this would add to revoked tasks set
+153:         // For MVP, we'll return not implemented
+154:         Err(BrokerError::NotImplemented)
+155:     }
+156: }
+
+================
+File: src/models/mod.rs
+================
+1: pub mod worker;
+2: pub mod task;
+3: pub mod queue;
+4: 
+5: pub use worker::{Worker, WorkerStatus};
+6: pub use task::{Task, TaskStatus};
+7: pub use queue::Queue;
+
+================
+File: src/models/queue.rs
+================
+ 1: use serde::{Deserialize, Serialize};
+ 2: 
+ 3: #[derive(Debug, Clone, Serialize, Deserialize)]
+ 4: pub struct Queue {
+ 5:     pub name: String,
+ 6:     pub length: u64,
+ 7:     pub consumers: u32,
+ 8: }
+ 9: 
+10: impl Queue {
+11:     pub fn new(name: String) -> Self {
+12:         Self {
+13:             name,
+14:             length: 0,
+15:             consumers: 0,
+16:         }
+17:     }
+18: 
+19:     pub fn is_empty(&self) -> bool {
+20:         self.length == 0
+21:     }
+22: 
+23:     pub fn has_consumers(&self) -> bool {
+24:         self.consumers > 0
+25:     }
+26: }
+
+================
+File: src/models/task.rs
+================
+ 1: use serde::{Deserialize, Serialize};
+ 2: use chrono::{DateTime, Utc};
+ 3: 
+ 4: #[derive(Debug, Clone, Serialize, Deserialize)]
+ 5: pub struct Task {
+ 6:     pub id: String,
+ 7:     pub name: String,
+ 8:     pub args: String,  // JSON string
+ 9:     pub kwargs: String, // JSON string
+10:     pub status: TaskStatus,
+11:     pub worker: Option<String>,
+12:     pub timestamp: DateTime<Utc>,
+13:     pub result: Option<String>,
+14:     pub traceback: Option<String>,
+15: }
+16: 
+17: #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+18: pub enum TaskStatus {
+19:     Pending,
+20:     Active,
+21:     Success,
+22:     Failure,
+23:     Retry,
+24:     Revoked,
+25: }
+26: 
+27: impl Task {
+28:     pub fn new(id: String, name: String) -> Self {
+29:         Self {
+30:             id,
+31:             name,
+32:             args: "[]".to_string(),
+33:             kwargs: "{}".to_string(),
+34:             status: TaskStatus::Pending,
+35:             worker: None,
+36:             timestamp: Utc::now(),
+37:             result: None,
+38:             traceback: None,
+39:         }
+40:     }
+41: 
+42:     pub fn duration_since(&self, now: DateTime<Utc>) -> chrono::Duration {
+43:         now - self.timestamp
+44:     }
+45: }
+
+================
+File: src/models/worker.rs
+================
+ 1: use serde::{Deserialize, Serialize};
+ 2: 
+ 3: #[derive(Debug, Clone, Serialize, Deserialize)]
+ 4: pub struct Worker {
+ 5:     pub hostname: String,
+ 6:     pub status: WorkerStatus,
+ 7:     pub concurrency: u32,
+ 8:     pub queues: Vec<String>,
+ 9:     pub active_tasks: Vec<String>,
+10:     pub processed: u64,
+11:     pub failed: u64,
+12: }
+13: 
+14: #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+15: pub enum WorkerStatus {
+16:     Online,
+17:     Offline,
+18: }
+19: 
+20: impl Worker {
+21:     pub fn new(hostname: String) -> Self {
+22:         Self {
+23:             hostname,
+24:             status: WorkerStatus::Offline,
+25:             concurrency: 1,
+26:             queues: Vec::new(),
+27:             active_tasks: Vec::new(),
+28:             processed: 0,
+29:             failed: 0,
+30:         }
+31:     }
+32: 
+33:     pub fn utilization(&self) -> f32 {
+34:         if self.concurrency == 0 {
+35:             0.0
+36:         } else {
+37:             (self.active_tasks.len() as f32 / self.concurrency as f32) * 100.0
+38:         }
+39:     }
+40: }
+
+================
+File: src/ui/widgets/mod.rs
+================
+1: pub mod workers;
+2: pub mod tasks;
+3: pub mod queues;
+4: 
+5: pub use workers::WorkerWidget;
+6: pub use tasks::TaskWidget;
+7: pub use queues::QueueWidget;
+
+================
+File: src/ui/widgets/queues.rs
+================
+  1: use ratatui::{
+  2:     layout::{Constraint, Direction, Layout, Rect},
+  3:     style::{Color, Modifier, Style},
+  4:     text::{Line, Span},
+  5:     widgets::{Block, Borders, Gauge, List, ListItem, Paragraph},
+  6:     Frame,
+  7: };
+  8: 
+  9: use crate::app::App;
+ 10: 
+ 11: pub struct QueueWidget;
+ 12: 
+ 13: impl QueueWidget {
+ 14:     pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+ 15:         let chunks = Layout::default()
+ 16:             .direction(Direction::Horizontal)
+ 17:             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+ 18:             .split(area);
+ 19: 
+ 20:         // Draw queue list on the left
+ 21:         Self::draw_queue_list(f, app, chunks[0]);
+ 22: 
+ 23:         // Draw queue details on the right
+ 24:         Self::draw_queue_details(f, app, chunks[1]);
+ 25:     }
+ 26: 
+ 27:     fn draw_queue_list(f: &mut Frame, app: &App, area: Rect) {
+ 28:         let queues: Vec<ListItem> = app
+ 29:             .queues
+ 30:             .iter()
+ 31:             .enumerate()
+ 32:             .map(|(idx, queue)| {
+ 33:                 let status_color = if queue.length > 100 {
+ 34:                     Color::Red
+ 35:                 } else if queue.length > 50 {
+ 36:                     Color::Yellow
+ 37:                 } else {
+ 38:                     Color::Green
+ 39:                 };
+ 40: 
+ 41:                 let content = Line::from(vec![
+ 42:                     Span::raw(&queue.name),
+ 43:                     Span::raw("   "),
+ 44:                     Span::styled(
+ 45:                         queue.length.to_string(),
+ 46:                         Style::default().fg(status_color),
+ 47:                     ),
+ 48:                 ]);
+ 49: 
+ 50:                 if idx == app.selected_queue {
+ 51:                     ListItem::new(content).style(
+ 52:                         Style::default()
+ 53:                             .bg(Color::DarkGray)
+ 54:                             .add_modifier(Modifier::BOLD),
+ 55:                     )
+ 56:                 } else {
+ 57:                     ListItem::new(content)
+ 58:                 }
+ 59:             })
+ 60:             .collect();
+ 61: 
+ 62:         let queues_list = List::new(queues)
+ 63:             .block(
+ 64:                 Block::default()
+ 65:                     .borders(Borders::ALL)
+ 66:                     .title(format!(" Queues ({}) ", app.queues.len())),
+ 67:             )
+ 68:             .highlight_style(
+ 69:                 Style::default()
+ 70:                     .bg(Color::DarkGray)
+ 71:                     .add_modifier(Modifier::BOLD),
+ 72:             );
+ 73: 
+ 74:         f.render_widget(queues_list, area);
+ 75:     }
+ 76: 
+ 77:     fn draw_queue_details(f: &mut Frame, app: &App, area: Rect) {
+ 78:         if app.queues.is_empty() {
+ 79:             let no_queues = Paragraph::new("No queues found")
+ 80:                 .block(Block::default().borders(Borders::ALL).title(" Queue Details "));
+ 81:             f.render_widget(no_queues, area);
+ 82:             return;
+ 83:         }
+ 84: 
+ 85:         if let Some(queue) = app.queues.get(app.selected_queue) {
+ 86:             let chunks = Layout::default()
+ 87:                 .direction(Direction::Vertical)
+ 88:                 .constraints([
+ 89:                     Constraint::Length(8),
+ 90:                     Constraint::Length(3),
+ 91:                     Constraint::Min(0),
+ 92:                 ])
+ 93:                 .split(area);
+ 94: 
+ 95:             // Queue info
+ 96:             let info_lines = vec![
+ 97:                 Line::from(vec![
+ 98:                     Span::raw("Queue Name: "),
+ 99:                     Span::styled(&queue.name, Style::default().fg(Color::Cyan)),
+100:                 ]),
+101:                 Line::from(vec![
+102:                     Span::raw("Messages: "),
+103:                     Span::styled(
+104:                         queue.length.to_string(),
+105:                         Style::default().fg(if queue.length > 100 {
+106:                             Color::Red
+107:                         } else if queue.length > 50 {
+108:                             Color::Yellow
+109:                         } else {
+110:                             Color::Green
+111:                         }),
+112:                     ),
+113:                 ]),
+114:                 Line::from(vec![
+115:                     Span::raw("Consumers: "),
+116:                     Span::raw(queue.consumers.to_string()),
+117:                 ]),
+118:                 Line::from(vec![
+119:                     Span::raw("Status: "),
+120:                     Span::styled(
+121:                         if queue.has_consumers() {
+122:                             "Active"
+123:                         } else {
+124:                             "No consumers"
+125:                         },
+126:                         Style::default().fg(if queue.has_consumers() {
+127:                             Color::Green
+128:                         } else {
+129:                             Color::Yellow
+130:                         }),
+131:                     ),
+132:                 ]),
+133:                 Line::from(""),
+134:                 Line::from(vec![
+135:                     Span::styled(
+136:                         "[p] Purge queue (requires confirmation)",
+137:                         Style::default().fg(Color::DarkGray),
+138:                     ),
+139:                 ]),
+140:             ];
+141: 
+142:             let info = Paragraph::new(info_lines)
+143:                 .block(Block::default().borders(Borders::ALL).title(" Queue Details "));
+144:             f.render_widget(info, chunks[0]);
+145: 
+146:             // Queue fill gauge
+147:             let max_queue_size = 1000; // Configurable max for visualization
+148:             let ratio = (queue.length as f64 / max_queue_size as f64).min(1.0);
+149:             let gauge = Gauge::default()
+150:                 .block(Block::default().borders(Borders::ALL).title(" Queue Fill "))
+151:                 .gauge_style(Style::default().fg(if queue.length > 100 {
+152:                     Color::Red
+153:                 } else if queue.length > 50 {
+154:                     Color::Yellow
+155:                 } else {
+156:                     Color::Green
+157:                 }))
+158:                 .ratio(ratio)
+159:                 .label(format!("{}/{}", queue.length, max_queue_size));
+160:             f.render_widget(gauge, chunks[1]);
+161: 
+162:             // Additional info or actions
+163:             let actions = Paragraph::new(vec![
+164:                 Line::from("Available Actions:"),
+165:                 Line::from(""),
+166:                 Line::from("- View messages (coming soon)"),
+167:                 Line::from("- Purge queue (coming soon)"),
+168:                 Line::from("- Export messages (coming soon)"),
+169:             ])
+170:             .block(Block::default().borders(Borders::ALL).title(" Actions "));
+171:             f.render_widget(actions, chunks[2]);
+172:         }
+173:     }
+174: }
+
+================
+File: src/ui/widgets/tasks.rs
+================
+  1: use ratatui::{
+  2:     layout::{Constraint, Direction, Layout, Rect},
+  3:     style::{Color, Modifier, Style},
+  4:     text::{Line, Span},
+  5:     widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap},
+  6:     Frame,
+  7: };
+  8: 
+  9: use crate::app::App;
+ 10: use crate::models::TaskStatus;
+ 11: use chrono::Utc;
+ 12: 
+ 13: pub struct TaskWidget;
+ 14: 
+ 15: impl TaskWidget {
+ 16:     pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+ 17:         let chunks = Layout::default()
+ 18:             .direction(Direction::Vertical)
+ 19:             .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+ 20:             .split(area);
+ 21: 
+ 22:         // Draw task list
+ 23:         Self::draw_task_list(f, app, chunks[0]);
+ 24: 
+ 25:         // Draw task details
+ 26:         Self::draw_task_details(f, app, chunks[1]);
+ 27:     }
+ 28: 
+ 29:     fn draw_task_list(f: &mut Frame, app: &App, area: Rect) {
+ 30:         let filtered_tasks = app.get_filtered_tasks();
+ 31:         
+ 32:         let header = Row::new(vec!["ID", "Name", "Status", "Worker", "Duration"])
+ 33:             .style(Style::default().fg(Color::Yellow))
+ 34:             .bottom_margin(1);
+ 35: 
+ 36:         let rows: Vec<Row> = filtered_tasks
+ 37:             .iter()
+ 38:             .enumerate()
+ 39:             .map(|(idx, task)| {
+ 40:                 let status_color = match task.status {
+ 41:                     TaskStatus::Success => Color::Green,
+ 42:                     TaskStatus::Failure => Color::Red,
+ 43:                     TaskStatus::Active => Color::Yellow,
+ 44:                     TaskStatus::Pending => Color::Gray,
+ 45:                     TaskStatus::Retry => Color::Magenta,
+ 46:                     TaskStatus::Revoked => Color::DarkGray,
+ 47:                 };
+ 48: 
+ 49:                 let duration = task.duration_since(Utc::now());
+ 50:                 let duration_str = format!(
+ 51:                     "{:02}:{:02}:{:02}",
+ 52:                     duration.num_hours(),
+ 53:                     duration.num_minutes() % 60,
+ 54:                     duration.num_seconds() % 60
+ 55:                 );
+ 56: 
+ 57:                 let row = Row::new(vec![
+ 58:                     Cell::from(task.id.clone()),
+ 59:                     Cell::from(task.name.clone()),
+ 60:                     Cell::from(format!("{:?}", task.status))
+ 61:                         .style(Style::default().fg(status_color)),
+ 62:                     Cell::from(task.worker.as_deref().unwrap_or("-")),
+ 63:                     Cell::from(duration_str),
+ 64:                 ]);
+ 65: 
+ 66:                 if idx == app.selected_task {
+ 67:                     row.style(
+ 68:                         Style::default()
+ 69:                             .bg(Color::DarkGray)
+ 70:                             .add_modifier(Modifier::BOLD),
+ 71:                     )
+ 72:                 } else {
+ 73:                     row
+ 74:                 }
+ 75:             })
+ 76:             .collect();
+ 77: 
+ 78:         let title = if app.is_searching {
+ 79:             format!(" Tasks (filtered: {}/{}) ", filtered_tasks.len(), app.tasks.len())
+ 80:         } else {
+ 81:             format!(" Tasks ({}) ", app.tasks.len())
+ 82:         };
+ 83: 
+ 84:         let table = Table::new(
+ 85:             rows,
+ 86:             [
+ 87:                 Constraint::Percentage(20),
+ 88:                 Constraint::Percentage(30),
+ 89:                 Constraint::Percentage(15),
+ 90:                 Constraint::Percentage(20),
+ 91:                 Constraint::Percentage(15),
+ 92:             ],
+ 93:         )
+ 94:         .header(header)
+ 95:         .block(Block::default().borders(Borders::ALL).title(title))
+ 96:         .highlight_style(
+ 97:             Style::default()
+ 98:                 .bg(Color::DarkGray)
+ 99:                 .add_modifier(Modifier::BOLD),
+100:         );
+101: 
+102:         f.render_widget(table, area);
+103:     }
+104: 
+105:     fn draw_task_details(f: &mut Frame, app: &App, area: Rect) {
+106:         let filtered_tasks = app.get_filtered_tasks();
+107:         
+108:         if filtered_tasks.is_empty() {
+109:             let no_tasks = Paragraph::new("No tasks found")
+110:                 .block(Block::default().borders(Borders::ALL).title(" Task Details "));
+111:             f.render_widget(no_tasks, area);
+112:             return;
+113:         }
+114: 
+115:         if let Some(task) = filtered_tasks.get(app.selected_task) {
+116:             let mut lines = vec![
+117:                 Line::from(vec![
+118:                     Span::raw("ID: "),
+119:                     Span::styled(&task.id, Style::default().fg(Color::Cyan)),
+120:                 ]),
+121:                 Line::from(vec![
+122:                     Span::raw("Name: "),
+123:                     Span::styled(&task.name, Style::default().fg(Color::Yellow)),
+124:                 ]),
+125:                 Line::from(vec![
+126:                     Span::raw("Status: "),
+127:                     Span::styled(
+128:                         format!("{:?}", task.status),
+129:                         Style::default().fg(match task.status {
+130:                             TaskStatus::Success => Color::Green,
+131:                             TaskStatus::Failure => Color::Red,
+132:                             TaskStatus::Active => Color::Yellow,
+133:                             TaskStatus::Pending => Color::Gray,
+134:                             TaskStatus::Retry => Color::Magenta,
+135:                             TaskStatus::Revoked => Color::DarkGray,
+136:                         }),
+137:                     ),
+138:                 ]),
+139:                 Line::from(vec![
+140:                     Span::raw("Worker: "),
+141:                     Span::raw(task.worker.as_deref().unwrap_or("None")),
+142:                 ]),
+143:                 Line::from(vec![
+144:                     Span::raw("Timestamp: "),
+145:                     Span::raw(task.timestamp.format("%Y-%m-%d %H:%M:%S").to_string()),
+146:                 ]),
+147:             ];
+148: 
+149:             if !task.args.is_empty() && task.args != "[]" {
+150:                 lines.push(Line::from(vec![
+151:                     Span::raw("Args: "),
+152:                     Span::raw(&task.args),
+153:                 ]));
+154:             }
+155: 
+156:             if !task.kwargs.is_empty() && task.kwargs != "{}" {
+157:                 lines.push(Line::from(vec![
+158:                     Span::raw("Kwargs: "),
+159:                     Span::raw(&task.kwargs),
+160:                 ]));
+161:             }
+162: 
+163:             if let Some(result) = &task.result {
+164:                 lines.push(Line::from(""));
+165:                 lines.push(Line::from(vec![
+166:                     Span::raw("Result: "),
+167:                     Span::styled(result, Style::default().fg(Color::Green)),
+168:                 ]));
+169:             }
+170: 
+171:             if let Some(traceback) = &task.traceback {
+172:                 lines.push(Line::from(""));
+173:                 lines.push(Line::from(vec![Span::styled(
+174:                     "Traceback:",
+175:                     Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+176:                 )]));
+177:                 for line in traceback.lines() {
+178:                     lines.push(Line::from(vec![Span::styled(
+179:                         line,
+180:                         Style::default().fg(Color::Red),
+181:                     )]));
+182:                 }
+183:             }
+184: 
+185:             let details = Paragraph::new(lines)
+186:                 .block(Block::default().borders(Borders::ALL).title(" Task Details "))
+187:                 .wrap(Wrap { trim: false });
+188: 
+189:             f.render_widget(details, area);
+190:         }
+191:     }
+192: }
+
+================
+File: src/ui/widgets/workers.rs
+================
+  1: use ratatui::{
+  2:     layout::{Constraint, Direction, Layout, Rect},
+  3:     style::{Color, Modifier, Style},
+  4:     text::{Line, Span},
+  5:     widgets::{Block, Borders, List, ListItem, Paragraph, Row, Table},
+  6:     Frame,
+  7: };
+  8: 
+  9: use crate::app::App;
+ 10: use crate::models::WorkerStatus;
+ 11: 
+ 12: pub struct WorkerWidget;
+ 13: 
+ 14: impl WorkerWidget {
+ 15:     pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+ 16:         let chunks = Layout::default()
+ 17:             .direction(Direction::Horizontal)
+ 18:             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+ 19:             .split(area);
+ 20: 
+ 21:         // Draw worker list on the left
+ 22:         Self::draw_worker_list(f, app, chunks[0]);
+ 23: 
+ 24:         // Draw worker details on the right
+ 25:         Self::draw_worker_details(f, app, chunks[1]);
+ 26:     }
+ 27: 
+ 28:     fn draw_worker_list(f: &mut Frame, app: &App, area: Rect) {
+ 29:         let workers: Vec<ListItem> = app
+ 30:             .workers
+ 31:             .iter()
+ 32:             .enumerate()
+ 33:             .map(|(idx, worker)| {
+ 34:                 let status_symbol = match worker.status {
+ 35:                     WorkerStatus::Online => "●",
+ 36:                     WorkerStatus::Offline => "○",
+ 37:                 };
+ 38:                 let status_color = match worker.status {
+ 39:                     WorkerStatus::Online => Color::Green,
+ 40:                     WorkerStatus::Offline => Color::Red,
+ 41:                 };
+ 42: 
+ 43:                 let content = Line::from(vec![
+ 44:                     Span::styled(status_symbol, Style::default().fg(status_color)),
+ 45:                     Span::raw(" "),
+ 46:                     Span::raw(&worker.hostname),
+ 47:                 ]);
+ 48: 
+ 49:                 if idx == app.selected_worker {
+ 50:                     ListItem::new(content).style(
+ 51:                         Style::default()
+ 52:                             .bg(Color::DarkGray)
+ 53:                             .add_modifier(Modifier::BOLD),
+ 54:                     )
+ 55:                 } else {
+ 56:                     ListItem::new(content)
+ 57:                 }
+ 58:             })
+ 59:             .collect();
+ 60: 
+ 61:         let workers_list = List::new(workers)
+ 62:             .block(
+ 63:                 Block::default()
+ 64:                     .borders(Borders::ALL)
+ 65:                     .title(format!(" Workers ({}) ", app.workers.len())),
+ 66:             )
+ 67:             .highlight_style(
+ 68:                 Style::default()
+ 69:                     .bg(Color::DarkGray)
+ 70:                     .add_modifier(Modifier::BOLD),
+ 71:             );
+ 72: 
+ 73:         f.render_widget(workers_list, area);
+ 74:     }
+ 75: 
+ 76:     fn draw_worker_details(f: &mut Frame, app: &App, area: Rect) {
+ 77:         if app.workers.is_empty() {
+ 78:             let no_workers = Paragraph::new("No workers found")
+ 79:                 .block(Block::default().borders(Borders::ALL).title(" Worker Details "));
+ 80:             f.render_widget(no_workers, area);
+ 81:             return;
+ 82:         }
+ 83: 
+ 84:         if let Some(worker) = app.workers.get(app.selected_worker) {
+ 85:             let chunks = Layout::default()
+ 86:                 .direction(Direction::Vertical)
+ 87:                 .constraints([Constraint::Length(10), Constraint::Min(0)])
+ 88:                 .split(area);
+ 89: 
+ 90:             // Worker info section
+ 91:             let info_lines = vec![
+ 92:                 Line::from(vec![
+ 93:                     Span::raw("Hostname: "),
+ 94:                     Span::styled(&worker.hostname, Style::default().fg(Color::Cyan)),
+ 95:                 ]),
+ 96:                 Line::from(vec![
+ 97:                     Span::raw("Status: "),
+ 98:                     Span::styled(
+ 99:                         match worker.status {
+100:                             WorkerStatus::Online => "Online",
+101:                             WorkerStatus::Offline => "Offline",
+102:                         },
+103:                         Style::default().fg(match worker.status {
+104:                             WorkerStatus::Online => Color::Green,
+105:                             WorkerStatus::Offline => Color::Red,
+106:                         }),
+107:                     ),
+108:                 ]),
+109:                 Line::from(vec![
+110:                     Span::raw("Concurrency: "),
+111:                     Span::raw(worker.concurrency.to_string()),
+112:                 ]),
+113:                 Line::from(vec![
+114:                     Span::raw("Active Tasks: "),
+115:                     Span::raw(format!("{}/{}", worker.active_tasks.len(), worker.concurrency)),
+116:                 ]),
+117:                 Line::from(vec![
+118:                     Span::raw("Utilization: "),
+119:                     Span::raw(format!("{:.1}%", worker.utilization())),
+120:                 ]),
+121:                 Line::from(vec![
+122:                     Span::raw("Processed: "),
+123:                     Span::styled(
+124:                         worker.processed.to_string(),
+125:                         Style::default().fg(Color::Green),
+126:                     ),
+127:                 ]),
+128:                 Line::from(vec![
+129:                     Span::raw("Failed: "),
+130:                     Span::styled(
+131:                         worker.failed.to_string(),
+132:                         Style::default().fg(Color::Red),
+133:                     ),
+134:                 ]),
+135:                 Line::from(vec![
+136:                     Span::raw("Queues: "),
+137:                     Span::raw(worker.queues.join(", ")),
+138:                 ]),
+139:             ];
+140: 
+141:             let info = Paragraph::new(info_lines)
+142:                 .block(Block::default().borders(Borders::ALL).title(" Worker Details "));
+143:             f.render_widget(info, chunks[0]);
+144: 
+145:             // Active tasks section
+146:             if !worker.active_tasks.is_empty() {
+147:                 let task_rows: Vec<Row> = worker
+148:                     .active_tasks
+149:                     .iter()
+150:                     .map(|task_id| {
+151:                         Row::new(vec![task_id.clone()])
+152:                     })
+153:                     .collect();
+154: 
+155:                 let tasks_table = Table::new(
+156:                     task_rows,
+157:                     [Constraint::Percentage(100)],
+158:                 )
+159:                 .block(Block::default().borders(Borders::ALL).title(" Active Tasks "))
+160:                 .header(
+161:                     Row::new(vec!["Task ID"])
+162:                         .style(Style::default().fg(Color::Yellow))
+163:                         .bottom_margin(1),
+164:                 );
+165: 
+166:                 f.render_widget(tasks_table, chunks[1]);
+167:             } else {
+168:                 let no_tasks = Paragraph::new("No active tasks")
+169:                     .block(Block::default().borders(Borders::ALL).title(" Active Tasks "));
+170:                 f.render_widget(no_tasks, chunks[1]);
+171:             }
+172:         }
+173:     }
+174: }
+
+================
+File: src/ui/events.rs
+================
+ 1: use crossterm::event::{self, Event, KeyCode, KeyEvent};
+ 2: use std::time::Duration;
+ 3: 
+ 4: pub enum AppEvent {
+ 5:     Key(KeyEvent),
+ 6:     Tick,
+ 7:     Refresh,
+ 8: }
+ 9: 
+10: pub async fn next_event(tick_rate: Duration) -> Result<AppEvent, std::io::Error> {
+11:     if event::poll(tick_rate)? {
+12:         match event::read()? {
+13:             Event::Key(key) => Ok(AppEvent::Key(key)),
+14:             _ => Ok(AppEvent::Tick),
+15:         }
+16:     } else {
+17:         Ok(AppEvent::Tick)
+18:     }
+19: }
+20: 
+21: pub fn handle_key_event(key: KeyEvent, app: &mut crate::app::App) {
+22:     if app.is_searching {
+23:         match key.code {
+24:             KeyCode::Esc => app.stop_search(),
+25:             KeyCode::Enter => app.stop_search(),
+26:             KeyCode::Char(c) => app.search_query.push(c),
+27:             KeyCode::Backspace => {
+28:                 app.search_query.pop();
+29:             }
+30:             _ => {}
+31:         }
+32:         return;
+33:     }
+34: 
+35:     if app.show_help {
+36:         app.toggle_help();
+37:         return;
+38:     }
+39: 
+40:     match key.code {
+41:         KeyCode::Char('q') => app.should_quit = true,
+42:         KeyCode::Char('?') => app.toggle_help(),
+43:         KeyCode::Tab => app.next_tab(),
+44:         KeyCode::BackTab => app.previous_tab(),
+45:         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
+46:         KeyCode::Down | KeyCode::Char('j') => app.select_next(),
+47:         KeyCode::Char('/') => app.start_search(),
+48:         _ => {}
+49:     }
+50: }
+
+================
+File: src/ui/mod.rs
+================
+  1: pub mod widgets;
+  2: pub mod events;
+  3: 
+  4: use ratatui::{
+  5:     layout::{Constraint, Direction, Layout, Rect},
+  6:     style::{Color, Modifier, Style},
+  7:     text::{Line, Span},
+  8:     widgets::{Block, Borders, Tabs},
+  9:     Frame,
+ 10: };
+ 11: 
+ 12: use crate::app::{App, Tab};
+ 13: use crate::ui::widgets::{WorkerWidget, TaskWidget, QueueWidget};
+ 14: 
+ 15: pub fn draw(f: &mut Frame, app: &mut App) {
+ 16:     let chunks = Layout::default()
+ 17:         .direction(Direction::Vertical)
+ 18:         .constraints([
+ 19:             Constraint::Length(3),  // Header
+ 20:             Constraint::Min(0),     // Main content
+ 21:             Constraint::Length(3),  // Status bar
+ 22:         ])
+ 23:         .split(f.size());
+ 24: 
+ 25:     // Draw header with tabs
+ 26:     draw_header(f, app, chunks[0]);
+ 27: 
+ 28:     // Draw main content based on selected tab
+ 29:     match app.selected_tab {
+ 30:         Tab::Workers => WorkerWidget::draw(f, app, chunks[1]),
+ 31:         Tab::Tasks => TaskWidget::draw(f, app, chunks[1]),
+ 32:         Tab::Queues => QueueWidget::draw(f, app, chunks[1]),
+ 33:     }
+ 34: 
+ 35:     // Draw status bar
+ 36:     draw_status_bar(f, app, chunks[2]);
+ 37: 
+ 38:     // Draw help overlay if active
+ 39:     if app.show_help {
+ 40:         draw_help(f);
+ 41:     }
+ 42: }
+ 43: 
+ 44: fn draw_header(f: &mut Frame, app: &App, area: Rect) {
+ 45:     let titles = vec!["Workers", "Queues", "Tasks"];
+ 46:     let selected = match app.selected_tab {
+ 47:         Tab::Workers => 0,
+ 48:         Tab::Queues => 1,
+ 49:         Tab::Tasks => 2,
+ 50:     };
+ 51: 
+ 52:     let tabs = Tabs::new(titles)
+ 53:         .block(Block::default().borders(Borders::ALL).title(" LazyCelery v0.1.0 "))
+ 54:         .select(selected)
+ 55:         .style(Style::default().fg(Color::Cyan))
+ 56:         .highlight_style(
+ 57:             Style::default()
+ 58:                 .add_modifier(Modifier::BOLD)
+ 59:                 .bg(Color::Black),
+ 60:         );
+ 61: 
+ 62:     f.render_widget(tabs, area);
+ 63: }
+ 64: 
+ 65: fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
+ 66:     let status_chunks = Layout::default()
+ 67:         .direction(Direction::Horizontal)
+ 68:         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+ 69:         .split(area);
+ 70: 
+ 71:     // Left side - general info
+ 72:     let status_left = if app.is_searching {
+ 73:         format!("Search: {}_", app.search_query)
+ 74:     } else {
+ 75:         format!(
+ 76:             "Workers: {} | Tasks: {} | Queues: {}",
+ 77:             app.workers.len(),
+ 78:             app.tasks.len(),
+ 79:             app.queues.len()
+ 80:         )
+ 81:     };
+ 82: 
+ 83:     let status_left_widget = Block::default()
+ 84:         .borders(Borders::ALL)
+ 85:         .title(Span::raw(status_left));
+ 86:     f.render_widget(status_left_widget, status_chunks[0]);
+ 87: 
+ 88:     // Right side - key hints
+ 89:     let key_hints = if app.is_searching {
+ 90:         "[Enter] Confirm | [Esc] Cancel"
+ 91:     } else {
+ 92:         "[Tab] Switch | [↑↓] Navigate | [/] Search | [?] Help | [q] Quit"
+ 93:     };
+ 94: 
+ 95:     let status_right_widget = Block::default()
+ 96:         .borders(Borders::ALL)
+ 97:         .title(Span::raw(key_hints));
+ 98:     f.render_widget(status_right_widget, status_chunks[1]);
+ 99: }
+100: 
+101: fn draw_help(f: &mut Frame) {
+102:     use ratatui::widgets::{Clear, Paragraph, Wrap};
+103: 
+104:     let area = centered_rect(60, 60, f.size());
+105:     f.render_widget(Clear, area);
+106: 
+107:     let help_text = vec![
+108:         Line::from("LazyCelery - Keyboard Shortcuts"),
+109:         Line::from(""),
+110:         Line::from("Navigation:"),
+111:         Line::from("  Tab       - Switch between tabs"),
+112:         Line::from("  ↑/k       - Move up"),
+113:         Line::from("  ↓/j       - Move down"),
+114:         Line::from("  Enter     - View details"),
+115:         Line::from("  Esc       - Go back"),
+116:         Line::from(""),
+117:         Line::from("Actions:"),
+118:         Line::from("  /         - Search"),
+119:         Line::from("  r         - Retry task (in Tasks tab)"),
+120:         Line::from("  x         - Revoke task (in Tasks tab)"),
+121:         Line::from("  R         - Refresh data"),
+122:         Line::from(""),
+123:         Line::from("General:"),
+124:         Line::from("  ?         - Toggle this help"),
+125:         Line::from("  q         - Quit application"),
+126:         Line::from(""),
+127:         Line::from("Press any key to close this help..."),
+128:     ];
+129: 
+130:     let help = Paragraph::new(help_text)
+131:         .block(
+132:             Block::default()
+133:                 .borders(Borders::ALL)
+134:                 .title(" Help ")
+135:                 .style(Style::default().bg(Color::Black)),
+136:         )
+137:         .wrap(Wrap { trim: true });
+138: 
+139:     f.render_widget(help, area);
+140: }
+141: 
+142: fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+143:     let popup_layout = Layout::default()
+144:         .direction(Direction::Vertical)
+145:         .constraints([
+146:             Constraint::Percentage((100 - percent_y) / 2),
+147:             Constraint::Percentage(percent_y),
+148:             Constraint::Percentage((100 - percent_y) / 2),
+149:         ])
+150:         .split(r);
+151: 
+152:     Layout::default()
+153:         .direction(Direction::Horizontal)
+154:         .constraints([
+155:             Constraint::Percentage((100 - percent_x) / 2),
+156:             Constraint::Percentage(percent_x),
+157:             Constraint::Percentage((100 - percent_x) / 2),
+158:         ])
+159:         .split(popup_layout[1])[1]
+160: }
+
+================
+File: src/utils/formatting.rs
+================
+ 1: use chrono::{DateTime, Duration, Utc};
+ 2: 
+ 3: pub fn format_duration(duration: Duration) -> String {
+ 4:     let hours = duration.num_hours();
+ 5:     let minutes = duration.num_minutes() % 60;
+ 6:     let seconds = duration.num_seconds() % 60;
+ 7:     
+ 8:     if hours > 0 {
+ 9:         format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+10:     } else {
+11:         format!("{:02}:{:02}", minutes, seconds)
+12:     }
+13: }
+14: 
+15: pub fn format_timestamp(timestamp: DateTime<Utc>) -> String {
+16:     timestamp.format("%Y-%m-%d %H:%M:%S").to_string()
+17: }
+18: 
+19: pub fn truncate_string(s: &str, max_len: usize) -> String {
+20:     if s.len() <= max_len {
+21:         s.to_string()
+22:     } else if max_len <= 3 {
+23:         "...".to_string()
+24:     } else {
+25:         format!("{}...", &s[..max_len - 3])
+26:     }
+27: }
+
+================
+File: src/utils/mod.rs
+================
+1: pub mod formatting;
+
+================
+File: src/app.rs
+================
+  1: use std::sync::Arc;
+  2: use tokio::sync::Mutex;
+  3: use crate::models::{Worker, Task, Queue};
+  4: use crate::broker::Broker;
+  5: use crate::error::AppError;
+  6: 
+  7: #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+  8: pub enum Tab {
+  9:     Workers,
+ 10:     Queues,
+ 11:     Tasks,
+ 12: }
+ 13: 
+ 14: pub struct App {
+ 15:     pub workers: Vec<Worker>,
+ 16:     pub tasks: Vec<Task>,
+ 17:     pub queues: Vec<Queue>,
+ 18:     pub selected_tab: Tab,
+ 19:     pub should_quit: bool,
+ 20:     pub selected_worker: usize,
+ 21:     pub selected_task: usize,
+ 22:     pub selected_queue: usize,
+ 23:     pub show_help: bool,
+ 24:     pub search_query: String,
+ 25:     pub is_searching: bool,
+ 26:     broker: Arc<Mutex<Box<dyn Broker>>>,
+ 27: }
+ 28: 
+ 29: impl App {
+ 30:     pub fn new(broker: Box<dyn Broker>) -> Self {
+ 31:         Self {
+ 32:             workers: Vec::new(),
+ 33:             tasks: Vec::new(),
+ 34:             queues: Vec::new(),
+ 35:             selected_tab: Tab::Workers,
+ 36:             should_quit: false,
+ 37:             selected_worker: 0,
+ 38:             selected_task: 0,
+ 39:             selected_queue: 0,
+ 40:             show_help: false,
+ 41:             search_query: String::new(),
+ 42:             is_searching: false,
+ 43:             broker: Arc::new(Mutex::new(broker)),
+ 44:         }
+ 45:     }
+ 46:     
+ 47:     pub async fn refresh_data(&mut self) -> Result<(), AppError> {
+ 48:         let broker = self.broker.lock().await;
+ 49:         
+ 50:         // Fetch all data in parallel
+ 51:         let (workers_result, tasks_result, queues_result) = tokio::join!(
+ 52:             broker.get_workers(),
+ 53:             broker.get_tasks(),
+ 54:             broker.get_queues()
+ 55:         );
+ 56:         
+ 57:         self.workers = workers_result?;
+ 58:         self.tasks = tasks_result?;
+ 59:         self.queues = queues_result?;
+ 60:         
+ 61:         // Ensure selection indices are valid
+ 62:         if self.selected_worker >= self.workers.len() && !self.workers.is_empty() {
+ 63:             self.selected_worker = self.workers.len() - 1;
+ 64:         }
+ 65:         if self.selected_task >= self.tasks.len() && !self.tasks.is_empty() {
+ 66:             self.selected_task = self.tasks.len() - 1;
+ 67:         }
+ 68:         if self.selected_queue >= self.queues.len() && !self.queues.is_empty() {
+ 69:             self.selected_queue = self.queues.len() - 1;
+ 70:         }
+ 71:         
+ 72:         Ok(())
+ 73:     }
+ 74:     
+ 75:     pub fn next_tab(&mut self) {
+ 76:         self.selected_tab = match self.selected_tab {
+ 77:             Tab::Workers => Tab::Queues,
+ 78:             Tab::Queues => Tab::Tasks,
+ 79:             Tab::Tasks => Tab::Workers,
+ 80:         };
+ 81:     }
+ 82:     
+ 83:     pub fn previous_tab(&mut self) {
+ 84:         self.selected_tab = match self.selected_tab {
+ 85:             Tab::Workers => Tab::Tasks,
+ 86:             Tab::Queues => Tab::Workers,
+ 87:             Tab::Tasks => Tab::Queues,
+ 88:         };
+ 89:     }
+ 90:     
+ 91:     pub fn select_next(&mut self) {
+ 92:         match self.selected_tab {
+ 93:             Tab::Workers => {
+ 94:                 if !self.workers.is_empty() {
+ 95:                     self.selected_worker = (self.selected_worker + 1) % self.workers.len();
+ 96:                 }
+ 97:             }
+ 98:             Tab::Tasks => {
+ 99:                 if !self.tasks.is_empty() {
+100:                     self.selected_task = (self.selected_task + 1) % self.tasks.len();
+101:                 }
+102:             }
+103:             Tab::Queues => {
+104:                 if !self.queues.is_empty() {
+105:                     self.selected_queue = (self.selected_queue + 1) % self.queues.len();
+106:                 }
+107:             }
+108:         }
+109:     }
+110:     
+111:     pub fn select_previous(&mut self) {
+112:         match self.selected_tab {
+113:             Tab::Workers => {
+114:                 if !self.workers.is_empty() {
+115:                     self.selected_worker = if self.selected_worker == 0 {
+116:                         self.workers.len() - 1
+117:                     } else {
+118:                         self.selected_worker - 1
+119:                     };
+120:                 }
+121:             }
+122:             Tab::Tasks => {
+123:                 if !self.tasks.is_empty() {
+124:                     self.selected_task = if self.selected_task == 0 {
+125:                         self.tasks.len() - 1
+126:                     } else {
+127:                         self.selected_task - 1
+128:                     };
+129:                 }
+130:             }
+131:             Tab::Queues => {
+132:                 if !self.queues.is_empty() {
+133:                     self.selected_queue = if self.selected_queue == 0 {
+134:                         self.queues.len() - 1
+135:                     } else {
+136:                         self.selected_queue - 1
+137:                     };
+138:                 }
+139:             }
+140:         }
+141:     }
+142:     
+143:     pub fn toggle_help(&mut self) {
+144:         self.show_help = !self.show_help;
+145:     }
+146:     
+147:     pub fn start_search(&mut self) {
+148:         self.is_searching = true;
+149:         self.search_query.clear();
+150:     }
+151:     
+152:     pub fn stop_search(&mut self) {
+153:         self.is_searching = false;
+154:         self.search_query.clear();
+155:     }
+156:     
+157:     pub fn get_filtered_tasks(&self) -> Vec<&Task> {
+158:         if self.search_query.is_empty() {
+159:             self.tasks.iter().collect()
+160:         } else {
+161:             self.tasks
+162:                 .iter()
+163:                 .filter(|task| {
+164:                     task.name.to_lowercase().contains(&self.search_query.to_lowercase())
+165:                         || task.id.to_lowercase().contains(&self.search_query.to_lowercase())
+166:                 })
+167:                 .collect()
+168:         }
+169:     }
+170: }
+
+================
+File: src/config.rs
+================
+ 1: use serde::{Deserialize, Serialize};
+ 2: use std::path::PathBuf;
+ 3: use anyhow::Result;
+ 4: 
+ 5: #[derive(Debug, Clone, Serialize, Deserialize)]
+ 6: pub struct Config {
+ 7:     pub broker: BrokerConfig,
+ 8:     pub ui: UiConfig,
+ 9: }
+10: 
+11: #[derive(Debug, Clone, Serialize, Deserialize)]
+12: pub struct BrokerConfig {
+13:     pub url: String,
+14:     pub timeout: u32,
+15:     pub retry_attempts: u32,
+16: }
+17: 
+18: #[derive(Debug, Clone, Serialize, Deserialize)]
+19: pub struct UiConfig {
+20:     pub refresh_interval: u64, // milliseconds
+21:     pub theme: String,
+22: }
+23: 
+24: impl Default for Config {
+25:     fn default() -> Self {
+26:         Self {
+27:             broker: BrokerConfig {
+28:                 url: "redis://localhost:6379/0".to_string(),
+29:                 timeout: 30,
+30:                 retry_attempts: 3,
+31:             },
+32:             ui: UiConfig {
+33:                 refresh_interval: 1000,
+34:                 theme: "dark".to_string(),
+35:             },
+36:         }
+37:     }
+38: }
+39: 
+40: impl Config {
+41:     pub fn from_file(path: PathBuf) -> Result<Self> {
+42:         let contents = std::fs::read_to_string(path)?;
+43:         let config: Config = toml::from_str(&contents)?;
+44:         Ok(config)
+45:     }
+46: }
+
+================
+File: src/error.rs
+================
+ 1: use thiserror::Error;
+ 2: 
+ 3: #[derive(Debug, Error)]
+ 4: pub enum BrokerError {
+ 5:     #[error("Connection failed: {0}")]
+ 6:     ConnectionError(String),
+ 7:     
+ 8:     #[error("Authentication failed")]
+ 9:     AuthError,
+10:     
+11:     #[error("Broker operation failed: {0}")]
+12:     OperationError(String),
+13:     
+14:     #[error("Invalid broker URL: {0}")]
+15:     InvalidUrl(String),
+16:     
+17:     #[error("Timeout occurred")]
+18:     Timeout,
+19:     
+20:     #[error("Not implemented")]
+21:     NotImplemented,
+22: }
+23: 
+24: #[derive(Debug, Error)]
+25: pub enum AppError {
+26:     #[error("Broker error: {0}")]
+27:     Broker(#[from] BrokerError),
+28:     
+29:     #[error("UI error: {0}")]
+30:     Ui(String),
+31:     
+32:     #[error("Configuration error: {0}")]
+33:     Config(String),
+34: }
+
+================
+File: src/lib.rs
+================
+1: pub mod app;
+2: pub mod broker;
+3: pub mod config;
+4: pub mod error;
+5: pub mod models;
+6: pub mod ui;
+7: pub mod utils;
+
+================
+File: src/main.rs
+================
+  1: mod app;
+  2: mod broker;
+  3: mod config;
+  4: mod error;
+  5: mod models;
+  6: mod ui;
+  7: mod utils;
+  8: 
+  9: use anyhow::Result;
+ 10: use clap::Parser;
+ 11: use crossterm::{
+ 12:     event::{DisableMouseCapture, EnableMouseCapture},
+ 13:     execute,
+ 14:     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+ 15: };
+ 16: use ratatui::{backend::CrosstermBackend, Terminal};
+ 17: use std::{io, time::Duration};
+ 18: use tokio::time;
+ 19: 
+ 20: use crate::app::App;
+ 21: use crate::broker::{redis::RedisBroker, Broker};
+ 22: use crate::config::Config;
+ 23: use crate::ui::events::{handle_key_event, next_event, AppEvent};
+ 24: 
+ 25: #[derive(Parser, Debug)]
+ 26: #[command(author, version, about, long_about = None)]
+ 27: struct Args {
+ 28:     /// Broker URL (e.g., redis://localhost:6379/0)
+ 29:     #[arg(short, long)]
+ 30:     broker: Option<String>,
+ 31: 
+ 32:     /// Configuration file path
+ 33:     #[arg(short, long)]
+ 34:     config: Option<std::path::PathBuf>,
+ 35: }
+ 36: 
+ 37: #[tokio::main]
+ 38: async fn main() -> Result<()> {
+ 39:     let args = Args::parse();
+ 40: 
+ 41:     // Load configuration
+ 42:     let config = if let Some(config_path) = args.config {
+ 43:         Config::from_file(config_path)?
+ 44:     } else {
+ 45:         Config::default()
+ 46:     };
+ 47: 
+ 48:     // Determine broker URL
+ 49:     let broker_url = args.broker.unwrap_or_else(|| config.broker.url.clone());
+ 50: 
+ 51:     // Connect to broker
+ 52:     let broker: Box<dyn Broker> = if broker_url.starts_with("redis://") {
+ 53:         Box::new(RedisBroker::connect(&broker_url).await?)
+ 54:     } else if broker_url.starts_with("amqp://") {
+ 55:         return Err(anyhow::anyhow!("AMQP broker not yet implemented"));
+ 56:     } else {
+ 57:         return Err(anyhow::anyhow!("Unknown broker type: {}", broker_url));
+ 58:     };
+ 59: 
+ 60:     // Create app state
+ 61:     let mut app = App::new(broker);
+ 62: 
+ 63:     // Setup terminal
+ 64:     enable_raw_mode()?;
+ 65:     let mut stdout = io::stdout();
+ 66:     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+ 67:     let backend = CrosstermBackend::new(stdout);
+ 68:     let mut terminal = Terminal::new(backend)?;
+ 69: 
+ 70:     // Run the app
+ 71:     let res = run_app(&mut terminal, &mut app, &config).await;
+ 72: 
+ 73:     // Restore terminal
+ 74:     disable_raw_mode()?;
+ 75:     execute!(
+ 76:         terminal.backend_mut(),
+ 77:         LeaveAlternateScreen,
+ 78:         DisableMouseCapture
+ 79:     )?;
+ 80:     terminal.show_cursor()?;
+ 81: 
+ 82:     if let Err(err) = res {
+ 83:         eprintln!("Error: {}", err);
+ 84:     }
+ 85: 
+ 86:     Ok(())
+ 87: }
+ 88: 
+ 89: async fn run_app(
+ 90:     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+ 91:     app: &mut App,
+ 92:     config: &Config,
+ 93: ) -> Result<()> {
+ 94:     // Initial data fetch
+ 95:     app.refresh_data().await?;
+ 96: 
+ 97:     // Set up refresh interval
+ 98:     let mut refresh_interval = time::interval(Duration::from_millis(config.ui.refresh_interval));
+ 99:     let tick_rate = Duration::from_millis(50); // 20 FPS max
+100: 
+101:     loop {
+102:         // Draw UI
+103:         terminal.draw(|f| ui::draw(f, app))?;
+104: 
+105:         // Handle events
+106:         tokio::select! {
+107:             // Handle user input
+108:             event = next_event(tick_rate) => {
+109:                 match event? {
+110:                     AppEvent::Key(key) => {
+111:                         handle_key_event(key, app);
+112:                         if app.should_quit {
+113:                             return Ok(());
+114:                         }
+115:                     }
+116:                     AppEvent::Tick => {}
+117:                     AppEvent::Refresh => {
+118:                         app.refresh_data().await?;
+119:                     }
+120:                 }
+121:             }
+122:             // Auto-refresh data
+123:             _ = refresh_interval.tick() => {
+124:                 app.refresh_data().await?;
+125:             }
+126:         }
+127:     }
+128: }
+
+================
+File: Cargo.toml
+================
+ 1: [package]
+ 2: name = "lazycelery"
+ 3: version = "0.1.0"
+ 4: edition = "2021"
+ 5: authors = ["LazyCelery Contributors"]
+ 6: description = "Terminal UI for monitoring and managing Celery workers and tasks"
+ 7: license = "MIT"
+ 8: 
+ 9: [dependencies]
+10: # TUI
+11: ratatui = "0.26"
+12: crossterm = "0.27"
+13: 
+14: # Async runtime
+15: tokio = { version = "1.35", features = ["full"] }
+16: async-trait = "0.1"
+17: 
+18: # Broker clients
+19: redis = { version = "0.24", features = ["tokio-comp"] }
+20: lapin = "2.3"
+21: 
+22: # Serialization
+23: serde = { version = "1.0", features = ["derive"] }
+24: serde_json = "1.0"
+25: toml = "0.8"
+26: 
+27: # Time handling
+28: chrono = { version = "0.4", features = ["serde"] }
+29: 
+30: # CLI
+31: clap = { version = "4.4", features = ["derive"] }
+32: 
+33: # Error handling
+34: thiserror = "1.0"
+35: anyhow = "1.0"
+36: 
+37: [dev-dependencies]
+38: tempfile = "3.8"
+39: mockall = "0.11"
+
+================
+File: CLAUDE.md
+================
+ 1: # CLAUDE.md
+ 2: 
+ 3: This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+ 4: 
+ 5: ## Project Overview
+ 6: 
+ 7: LazyCelery is a terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit. This is a Rust project currently in the specification phase - no implementation exists yet.
+ 8: 
+ 9: ## Development Commands
+10: 
+11: ```bash
+12: # Once project is initialized with cargo init:
+13: cargo build                              # Build debug version
+14: cargo build --release                    # Build optimized release
+15: cargo run -- --broker redis://localhost:6379/0    # Run with Redis broker
+16: cargo test                              # Run all tests
+17: cargo fmt                               # Format code
+18: cargo clippy                            # Lint code
+19: ```
+20: 
+21: ## Architecture Overview
+22: 
+23: ### Core Design Principles
+24: 1. **Single App State**: All application state lives in `src/app.rs` in the `App` struct
+25: 2. **Async Broker Operations**: All broker interactions use async/await with Tokio
+26: 3. **Trait-Based Broker Interface**: Common trait for Redis/AMQP implementations
+27: 4. **Widget-Based UI**: Each UI component is a separate widget with render() and handle_key()
+28: 
+29: ### Data Flow Architecture
+30: ```
+31: Broker (Redis/AMQP) → Async Broker Client → App State → UI Widgets → Terminal
+32:                            ↑                     ↓
+33:                            └── Background refresh task (1 second interval)
+34: ```
+35: 
+36: ### Key Architectural Decisions
+37: - **Error Handling**: Custom error types with `thiserror` for broker operations, `anyhow::Result` for main()
+38: - **State Updates**: Background task updates data every second, UI thread only handles rendering
+39: - **Event Loop**: Separate UI event handling from data updates to prevent blocking
+40: - **UI Refresh**: Limited to 10 FPS to reduce CPU usage
+41: 
+42: ### Module Responsibilities
+43: - `broker/`: Implements async clients for Redis and AMQP with common trait
+44: - `models/`: Simple data structures (Worker, Task, Queue) with serde serialization
+45: - `ui/widgets/`: Individual UI components that render specific data types
+46: - `app.rs`: Central state management and coordination
+47: - `main.rs`: CLI parsing, tokio runtime setup, event loop
+48: 
+49: ## Implementation Order
+50: 
+51: When implementing from scratch:
+52: 1. Create Cargo.toml with dependencies from code-style-guide.md
+53: 2. Implement models (Worker, Task, Queue structs)
+54: 3. Create broker trait and Redis implementation
+55: 4. Build basic TUI with worker listing
+56: 5. Add queue and task views
+57: 6. Implement task actions (retry, revoke)
+58: 
+59: ## Testing Strategy
+60: 
+61: Focus tests on:
+62: - Broker data parsing (mocking Redis/AMQP responses)
+63: - Model serialization/deserialization
+64: - Widget state management (navigation, selection)
+65: - Configuration loading from TOML files
+66: 
+67: ## Performance Considerations
+68: 
+69: - Batch broker requests to reduce network overhead
+70: - Use pagination for task lists over 100 items
+71: - Cache worker/queue data between refreshes
+72: - Avoid cloning large Vec<Task> collections
+
+================
+File: code-style-guide.md
+================
+  1: # LazyCelery Code Style Guide
+  2: 
+  3: ## Project Structure
+  4: 
+  5: ```
+  6: lazycelery/
+  7: ├── Cargo.toml
+  8: ├── README.md
+  9: ├── src/
+ 10: │   ├── main.rs           # Entry point
+ 11: │   ├── app.rs            # Application state
+ 12: │   ├── config.rs         # Configuration handling
+ 13: │   ├── broker/           # Broker connections
+ 14: │   │   ├── mod.rs
+ 15: │   │   ├── redis.rs
+ 16: │   │   └── amqp.rs
+ 17: │   ├── models/           # Data structures
+ 18: │   │   ├── mod.rs
+ 19: │   │   ├── worker.rs
+ 20: │   │   ├── task.rs
+ 21: │   │   └── queue.rs
+ 22: │   ├── ui/               # Terminal UI
+ 23: │   │   ├── mod.rs
+ 24: │   │   ├── widgets/
+ 25: │   │   │   ├── mod.rs
+ 26: │   │   │   ├── workers.rs
+ 27: │   │   │   ├── tasks.rs
+ 28: │   │   │   └── queues.rs
+ 29: │   │   └── events.rs
+ 30: │   └── utils/            # Utilities
+ 31: │       ├── mod.rs
+ 32: │       └── formatting.rs
+ 33: └── examples/
+ 34:     └── config.toml
+ 35: ```
+ 36: 
+ 37: ## Dependencies (Cargo.toml)
+ 38: 
+ 39: ```toml
+ 40: [dependencies]
+ 41: # TUI
+ 42: ratatui = "0.26"
+ 43: crossterm = "0.27"
+ 44: 
+ 45: # Async runtime
+ 46: tokio = { version = "1.35", features = ["full"] }
+ 47: 
+ 48: # Broker clients
+ 49: redis = { version = "0.24", features = ["tokio-comp"] }
+ 50: lapin = "2.3"
+ 51: 
+ 52: # Serialization
+ 53: serde = { version = "1.0", features = ["derive"] }
+ 54: serde_json = "1.0"
+ 55: 
+ 56: # Time handling
+ 57: chrono = { version = "0.4", features = ["serde"] }
+ 58: 
+ 59: # CLI
+ 60: clap = { version = "4.4", features = ["derive"] }
+ 61: 
+ 62: # Error handling
+ 63: thiserror = "1.0"
+ 64: anyhow = "1.0"
+ 65: ```
+ 66: 
+ 67: ## Code Structure Rules
+ 68: 
+ 69: ### Error Handling
+ 70: ```rust
+ 71: // Define custom error types using thiserror
+ 72: #[derive(Debug, thiserror::Error)]
+ 73: pub enum BrokerError {
+ 74:     #[error("Connection failed: {0}")]
+ 75:     ConnectionError(String),
+ 76:     #[error("Authentication failed")]
+ 77:     AuthError,
+ 78: }
+ 79: 
+ 80: // Always return Result<T, Error> for fallible operations
+ 81: // Use anyhow::Result for main() and top-level functions
+ 82: // Use specific error types for library code
+ 83: ```
+ 84: 
+ 85: ### Data Models
+ 86: ```rust
+ 87: // models/worker.rs
+ 88: use serde::{Deserialize, Serialize};
+ 89: use chrono::{DateTime, Utc};
+ 90: 
+ 91: #[derive(Debug, Clone, Serialize, Deserialize)]
+ 92: pub struct Worker {
+ 93:     pub hostname: String,
+ 94:     pub status: WorkerStatus,
+ 95:     pub concurrency: u32,
+ 96:     pub queues: Vec<String>,
+ 97:     pub active_tasks: Vec<String>,
+ 98:     pub processed: u64,
+ 99:     pub failed: u64,
+100: }
+101: 
+102: #[derive(Debug, Clone, Serialize, Deserialize)]
+103: pub enum WorkerStatus {
+104:     Online,
+105:     Offline,
+106: }
+107: ```
+108: 
+109: ### UI Widget Pattern
+110: ```rust
+111: pub struct WorkerWidget {
+112:     selected: usize,
+113: }
+114: 
+115: impl WorkerWidget {
+116:     pub fn new() -> Self {
+117:         Self { selected: 0 }
+118:     }
+119:     
+120:     pub fn render(&mut self, f: &mut Frame, area: Rect, workers: &[Worker]) {
+121:         // Render implementation
+122:     }
+123:     
+124:     pub fn handle_key(&mut self, key: KeyEvent) {
+125:         match key.code {
+126:             KeyCode::Up => self.previous(),
+127:             KeyCode::Down => self.next(),
+128:             _ => {}
+129:         }
+130:     }
+131: }
+132: ```
+133: 
+134: ### Async Pattern
+135: ```rust
+136: // All broker operations must be async
+137: impl RedisBroker {
+138:     pub async fn connect(url: &str) -> Result<Self, BrokerError> {
+139:         // Implementation
+140:     }
+141:     
+142:     pub async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError> {
+143:         // Implementation
+144:     }
+145: }
+146: ```
+147: 
+148: ### Application State
+149: ```rust
+150: // Single source of truth for all application data
+151: pub struct App {
+152:     pub workers: Vec<Worker>,
+153:     pub tasks: Vec<Task>,
+154:     pub queues: Vec<Queue>,
+155:     pub selected_tab: Tab,
+156:     pub should_quit: bool,
+157: }
+158: 
+159: impl App {
+160:     pub fn new() -> Self {
+161:         Self {
+162:             workers: Vec::new(),
+163:             tasks: Vec::new(),
+164:             queues: Vec::new(),
+165:             selected_tab: Tab::Workers,
+166:             should_quit: false,
+167:         }
+168:     }
+169: }
+170: ```
+171: 
+172: ## Key Implementation Notes
+173: 
+174: 1. **State Management**: Use a single `App` struct for all state
+175: 2. **Broker Interface**: Define a trait for broker operations, implement for Redis/AMQP
+176: 3. **Event Loop**: Separate UI events from data updates
+177: 4. **Error Display**: Show errors in the status bar, don't panic
+178: 5. **Data Refresh**: Update data every second in a background task
+179: 
+180: ## Testing Approach
+181: 
+182: Write tests for:
+183: - Model serialization/deserialization
+184: - Broker connection and data parsing
+185: - Widget keyboard navigation
+186: - Configuration loading
+187: 
+188: ## Performance Rules
+189: 
+190: - Don't block the UI thread
+191: - Batch broker requests when possible
+192: - Limit UI refresh to 10 FPS
+193: - Use pagination for large lists
+
+================
+File: README.md
+================
+ 1: # LazyCelery
+ 2: 
+ 3: A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker and lazygit.
+ 4: 
+ 5: ## Features
+ 6: 
+ 7: - Real-time worker monitoring
+ 8: - Queue management with message counts
+ 9: - Task listing with status tracking
+10: - Search and filter capabilities
+11: - Keyboard-driven interface
+12: 
+13: ## Installation
+14: 
+15: ```bash
+16: cargo build --release
+17: ```
+18: 
+19: ## Usage
+20: 
+21: ```bash
+22: # Connect to Redis broker
+23: lazycelery --broker redis://localhost:6379/0
+24: 
+25: # Use configuration file
+26: lazycelery --config ~/.config/lazycelery/config.toml
+27: ```
+28: 
+29: ## Keyboard Shortcuts
+30: 
+31: - `Tab` - Switch between Workers/Queues/Tasks
+32: - `↑/↓` or `j/k` - Navigate items
+33: - `/` - Search mode
+34: - `?` - Show help
+35: - `q` - Quit
+36: 
+37: ## Development
+38: 
+39: This is an MVP implementation. See `specs/` directory for planned features.
+
+
+
+
+================================================================
+End of Codebase
+================================================================

@@ -15,6 +15,23 @@ A terminal UI for monitoring and managing Celery workers and tasks, inspired by 
 - Search and filter capabilities
 - Keyboard-driven interface
 
+## Screenshots
+
+### Main Dashboard - Workers View
+![Workers View](screenshots/workers-view.png)
+
+### Queue Management
+![Queues View](screenshots/queues-view.png)
+
+### Task Monitoring
+![Tasks View](screenshots/tasks-view.png)
+
+### Search Mode
+![Search Mode](screenshots/search-mode.png)
+
+### Help Screen
+![Help Screen](screenshots/help-screen.png)
+
 ## Installation
 
 ### Using Cargo

@@ -76,7 +76,7 @@ mod integration_tests {
     use redis::{AsyncCommands, Client};
 
     async fn setup_test_redis() -> Result<Client> {
-        let client = Client::open("redis://127.0.0.1:6379")?;
+        let client = Client::open("redis://127.0.0.1:6379/1")?; // Use DB 1 for tests
         let mut conn = client.get_multiplexed_tokio_connection().await?;
 
         // Clear test data
@@ -138,7 +138,7 @@ mod integration_tests {
 
         populate_test_data(&client).await?;
 
-        let broker = RedisBroker::connect("redis://127.0.0.1:6379")
+        let broker = RedisBroker::connect("redis://127.0.0.1:6379/1")
             .await
             .map_err(|_| anyhow::anyhow!("Redis not available"))?;
 
@@ -174,7 +174,7 @@ mod integration_tests {
 
         populate_test_data(&client).await?;
 
-        let broker = RedisBroker::connect("redis://127.0.0.1:6379")
+        let broker = RedisBroker::connect("redis://127.0.0.1:6379/1")
             .await
             .map_err(|_| anyhow::anyhow!("Redis not available"))?;
 
@@ -225,7 +225,7 @@ mod integration_tests {
 
         populate_test_data(&client).await?;
 
-        let broker = RedisBroker::connect("redis://127.0.0.1:6379")
+        let broker = RedisBroker::connect("redis://127.0.0.1:6379/1")
             .await
             .map_err(|_| anyhow::anyhow!("Redis not available"))?;
 
@@ -277,7 +277,7 @@ mod integration_tests {
             .set("celery-task-meta-test-failed-task", failed_task.to_string())
             .await?;
 
-        let broker = RedisBroker::connect("redis://127.0.0.1:6379")
+        let broker = RedisBroker::connect("redis://127.0.0.1:6379/1")
             .await
             .map_err(|_| anyhow::anyhow!("Redis not available"))?;
 

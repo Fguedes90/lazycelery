@@ -1,0 +1,32 @@
+# Maintainer: Francisco Guedes <francis@example.com>
+pkgname=lazycelery
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Terminal UI for monitoring and managing Celery workers and tasks"
+arch=('x86_64')
+url="https://github.com/Fguedes90/lazycelery"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('rust' 'cargo')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Fguedes90/lazycelery/archive/v$pkgver.tar.gz")
+sha256sums=('PLACEHOLDER_SHA256')
+
+build() {
+    cd "$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --release --locked
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --release --locked
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -Dm755 target/release/$pkgname "$pkgdir/usr/bin/$pkgname"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

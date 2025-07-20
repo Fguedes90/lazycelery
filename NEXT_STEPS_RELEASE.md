@@ -82,8 +82,61 @@ Quando você fizer **merge da PR para main**, o workflow irá:
 - ✅ Detecção inteligente de tipo de release
 - ✅ Auto-bump de versão baseado em conventional commits  
 - ✅ Auto-publicação no crates.io
-- ⏳ Aguardando configuração do `CARGO_REGISTRY_TOKEN`
-- 🚀 **Depois do token: só fazer merge da PR!**
+- ✅ **Auto-distribuição para TODOS os package managers**
+- ⏳ Aguardando configuração dos tokens
+- 🚀 **Depois dos tokens: só fazer merge da PR!**
+
+## 📦 Package Managers Configurados
+
+### ✅ Automação Completa
+- **Cargo** (crates.io) - ⏳ Precisa `CARGO_REGISTRY_TOKEN`
+- **Homebrew** (macOS/Linux) - ⏳ Precisa repositório + token
+- **AUR** (Arch Linux) - ⏳ Precisa SSH key + registro AUR
+- **Scoop** (Windows) - ⏳ Precisa repositório + token
+- **Snap** (Linux) - ⏳ Precisa registro + credenciais
+
+### 📋 Tokens/Configurações Necessárias
+
+| Package Manager | Secret Name | Status |
+|----------------|-------------|--------|
+| Cargo | `CARGO_REGISTRY_TOKEN` | ⏳ Obrigatório |
+| Homebrew | `HOMEBREW_TAP_TOKEN` | ⏳ Obrigatório |
+| AUR | `AUR_SSH_KEY` | ⚠️ Opcional |
+| Scoop | `SCOOP_BUCKET_TOKEN` | ⚠️ Opcional |
+| Snap | `SNAP_STORE_LOGIN` | ⚠️ Opcional |
+
+**Nota**: Package managers marcados como "Opcional" serão ignorados se o token não estiver configurado.
+
+### 🚀 Métodos de Instalação Resultantes
+
+Após configurar os tokens, usuários poderão instalar com:
+
+```bash
+# Rust/Cargo (cross-platform)
+cargo install lazycelery
+
+# macOS/Linux - Homebrew
+brew tap Fguedes90/tap && brew install lazycelery
+
+# Arch Linux - AUR
+yay -S lazycelery          # Source
+yay -S lazycelery-bin      # Binary (faster)
+
+# Windows - Scoop
+scoop bucket add lazycelery https://github.com/Fguedes90/scoop-bucket.git
+scoop install lazycelery
+
+# Windows - Chocolatey
+choco install lazycelery
+
+# Linux - Snap
+snap install lazycelery
+
+# Direct download
+# Binários em GitHub Releases
+```
+
+**Detalhes completos em**: `PACKAGE_MANAGERS_SETUP.md`
 
 ## 🎯 Exemplo de Commits que Triggam Releases:
 

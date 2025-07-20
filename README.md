@@ -34,13 +34,60 @@ A terminal UI for monitoring and managing Celery workers and tasks, inspired by 
 
 ## Installation
 
-### Using Cargo
+Choose your preferred installation method:
+
+### 🦀 Cargo (Rust)
 
 ```bash
 cargo install lazycelery
 ```
 
-### From Source
+### 🍺 Homebrew (macOS/Linux)
+
+```bash
+brew tap Fguedes90/tap
+brew install lazycelery
+```
+
+### 📦 Arch Linux (AUR)
+
+```bash
+# Source package (builds from source)
+yay -S lazycelery
+
+# Binary package (faster install)
+yay -S lazycelery-bin
+```
+
+### 🪣 Scoop (Windows)
+
+```bash
+scoop bucket add lazycelery https://github.com/Fguedes90/scoop-bucket.git
+scoop install lazycelery
+```
+
+### 🍫 Chocolatey (Windows)
+
+```bash
+choco install lazycelery
+```
+
+### 📱 Snap (Linux)
+
+```bash
+snap install lazycelery
+```
+
+### 📥 Binary Download
+
+Download pre-built binaries from [GitHub Releases](https://github.com/Fguedes90/lazycelery/releases):
+
+- **Linux x86_64**: `lazycelery-linux-x86_64.tar.gz`
+- **macOS x86_64**: `lazycelery-macos-x86_64.tar.gz`  
+- **macOS ARM64**: `lazycelery-macos-aarch64.tar.gz`
+- **Windows x86_64**: `lazycelery-windows-x86_64.zip`
+
+### 🔧 From Source
 
 ```bash
 # Clone the repository

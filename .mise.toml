@@ -171,7 +171,10 @@ run = "cargo test --all-features --verbose"
 
 [tasks.ci-audit]
 description = "Run security audit for CI"
-run = "cargo audit"
+run = [
+    "cargo install cargo-audit",
+    "cargo audit"
+]
 
 [tasks.ci-all]
 description = "Run all CI checks"

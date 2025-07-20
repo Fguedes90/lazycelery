@@ -1,0 +1,39 @@
+[package]
+name = "lazycelery"
+version = "0.1.0"
+edition = "2021"
+authors = ["LazyCelery Contributors"]
+description = "Terminal UI for monitoring and managing Celery workers and tasks"
+license = "MIT"
+
+[dependencies]
+# TUI
+ratatui = "0.26"
+crossterm = "0.27"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# Broker clients
+redis = { version = "0.24", features = ["tokio-comp"] }
+lapin = "2.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+mockall = "0.11"

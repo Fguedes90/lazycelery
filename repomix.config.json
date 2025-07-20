@@ -1,0 +1,74 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "input": {
+    "maxFileSize": 52428800
+  },
+  "output": {
+    "filePath": "repomix-output.txt",
+    "style": "plain",
+    "parsableStyle": false,
+    "fileSummary": true,
+    "directoryStructure": true,
+    "files": true,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "compress": false,
+    "topFilesLength": 10,
+    "showLineNumbers": true,
+    "truncateBase64": false,
+    "copyToClipboard": false,
+    "git": {
+      "sortByChanges": true,
+      "sortByChangesMaxCommits": 100,
+      "includeDiffs": false
+    }
+  },
+  "include": [
+    "src/**/*.rs",
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "CLAUDE.md",
+    "code-style-guide.md",
+    "specs/**/*.md",
+    "examples/*.toml"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "target/",
+      "*.log",
+      "*.tmp",
+      "*.swp",
+      "*.bak",
+      "repomix-output.txt",
+      ".git/",
+      ".idea/",
+      ".vscode/",
+      "tests/",
+      "benches/",
+      "*.pyc",
+      "__pycache__/",
+      ".env",
+      ".env.*",
+      "node_modules/",
+      "dist/",
+      "build/",
+      "*.so",
+      "*.dylib",
+      "*.dll",
+      "*.exe",
+      ".DS_Store",
+      "Thumbs.db",
+      "*.lock",
+      "!Cargo.lock"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}

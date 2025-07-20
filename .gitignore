@@ -1,1 +1,46 @@
+# Rust
 /target
+**/*.rs.bk
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+.mise.local.toml
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Output files
+repomix-output.txt
+repomix-output.md
+
+# Coverage
+*.profraw
+cobertura.xml
+coverage/
+tarpaulin-report.html
+
+# Benchmarks
+/target/criterion
+
+# Documentation
+/target/doc
+
+# Backup files
+*.bak
+*.orig

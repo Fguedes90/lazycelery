@@ -63,7 +63,7 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(" LazyCelery v0.2.0 "),
+                .title(" LazyCelery v0.4.0 "),
         )
         .select(selected)
         .style(Style::default().fg(Color::Cyan))

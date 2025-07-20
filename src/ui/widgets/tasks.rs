@@ -28,14 +28,14 @@ impl TaskWidget {
 
     fn draw_task_list(f: &mut Frame, app: &App, area: Rect) {
         let filtered_tasks = app.get_filtered_tasks();
-        
+
         let header = Row::new(vec!["ID", "Name", "Status", "Worker", "Duration"])
             .style(Style::default().fg(Color::Yellow))
             .bottom_margin(1);
 
         // Calculate viewport
         let height = area.height.saturating_sub(4) as usize; // Account for borders and header
-        
+
         if filtered_tasks.is_empty() {
             let no_tasks = Row::new(vec![
                 Cell::from(""),
@@ -43,8 +43,9 @@ impl TaskWidget {
                 Cell::from(""),
                 Cell::from(""),
                 Cell::from(""),
-            ]).style(Style::default().fg(Color::DarkGray));
-            
+            ])
+            .style(Style::default().fg(Color::DarkGray));
+
             let table = Table::new(
                 vec![no_tasks],
                 [
@@ -57,20 +58,22 @@ impl TaskWidget {
             )
             .header(header)
             .block(Block::default().borders(Borders::ALL).title(" Tasks (0) "));
-            
+
             f.render_widget(table, area);
             return;
         }
-        
-        let selected = app.selected_task.min(filtered_tasks.len().saturating_sub(1));
-        
+
+        let selected = app
+            .selected_task
+            .min(filtered_tasks.len().saturating_sub(1));
+
         // Calculate the start of the viewport to ensure selected item is visible
         let start = if selected >= height && height > 0 {
             selected.saturating_sub(height / 2)
         } else {
             0
         };
-        
+
         let end = (start + height).min(filtered_tasks.len());
         let visible_tasks = &filtered_tasks[start..end];
 
@@ -123,9 +126,14 @@ impl TaskWidget {
         } else {
             String::new()
         };
-        
+
         let title = if app.is_searching {
-            format!(" Tasks (filtered: {}/{}){} ", filtered_tasks.len(), app.tasks.len(), scroll_info)
+            format!(
+                " Tasks (filtered: {}/{}){} ",
+                filtered_tasks.len(),
+                app.tasks.len(),
+                scroll_info
+            )
         } else {
             format!(" Tasks ({}){} ", app.tasks.len(), scroll_info)
         };
@@ -153,15 +161,20 @@ impl TaskWidget {
 
     fn draw_task_details(f: &mut Frame, app: &App, area: Rect) {
         let filtered_tasks = app.get_filtered_tasks();
-        
+
         if filtered_tasks.is_empty() {
-            let no_tasks = Paragraph::new("No tasks found")
-                .block(Block::default().borders(Borders::ALL).title(" Task Details "));
+            let no_tasks = Paragraph::new("No tasks found").block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Task Details "),
+            );
             f.render_widget(no_tasks, area);
             return;
         }
 
-        let selected = app.selected_task.min(filtered_tasks.len().saturating_sub(1));
+        let selected = app
+            .selected_task
+            .min(filtered_tasks.len().saturating_sub(1));
         if let Some(task) = filtered_tasks.get(selected) {
             let mut lines = vec![
                 Line::from(vec![
@@ -197,10 +210,7 @@ impl TaskWidget {
             ];
 
             if !task.args.is_empty() && task.args != "[]" {
-                lines.push(Line::from(vec![
-                    Span::raw("Args: "),
-                    Span::raw(&task.args),
-                ]));
+                lines.push(Line::from(vec![Span::raw("Args: "), Span::raw(&task.args)]));
             }
 
             if !task.kwargs.is_empty() && task.kwargs != "{}" {
@@ -233,7 +243,11 @@ impl TaskWidget {
             }
 
             let details = Paragraph::new(lines)
-                .block(Block::default().borders(Borders::ALL).title(" Task Details "))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(" Task Details "),
+                )
                 .wrap(Wrap { trim: false });
 
             f.render_widget(details, area);

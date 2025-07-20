@@ -75,8 +75,11 @@ impl WorkerWidget {
 
     fn draw_worker_details(f: &mut Frame, app: &App, area: Rect) {
         if app.workers.is_empty() {
-            let no_workers = Paragraph::new("No workers found")
-                .block(Block::default().borders(Borders::ALL).title(" Worker Details "));
+            let no_workers = Paragraph::new("No workers found").block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Worker Details "),
+            );
             f.render_widget(no_workers, area);
             return;
         }
@@ -112,7 +115,11 @@ impl WorkerWidget {
                 ]),
                 Line::from(vec![
                     Span::raw("Active Tasks: "),
-                    Span::raw(format!("{}/{}", worker.active_tasks.len(), worker.concurrency)),
+                    Span::raw(format!(
+                        "{}/{}",
+                        worker.active_tasks.len(),
+                        worker.concurrency
+                    )),
                 ]),
                 Line::from(vec![
                     Span::raw("Utilization: "),
@@ -127,10 +134,7 @@ impl WorkerWidget {
                 ]),
                 Line::from(vec![
                     Span::raw("Failed: "),
-                    Span::styled(
-                        worker.failed.to_string(),
-                        Style::default().fg(Color::Red),
-                    ),
+                    Span::styled(worker.failed.to_string(), Style::default().fg(Color::Red)),
                 ]),
                 Line::from(vec![
                     Span::raw("Queues: "),
@@ -138,8 +142,11 @@ impl WorkerWidget {
                 ]),
             ];
 
-            let info = Paragraph::new(info_lines)
-                .block(Block::default().borders(Borders::ALL).title(" Worker Details "));
+            let info = Paragraph::new(info_lines).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Worker Details "),
+            );
             f.render_widget(info, chunks[0]);
 
             // Active tasks section
@@ -147,26 +154,28 @@ impl WorkerWidget {
                 let task_rows: Vec<Row> = worker
                     .active_tasks
                     .iter()
-                    .map(|task_id| {
-                        Row::new(vec![task_id.clone()])
-                    })
+                    .map(|task_id| Row::new(vec![task_id.clone()]))
                     .collect();
 
-                let tasks_table = Table::new(
-                    task_rows,
-                    [Constraint::Percentage(100)],
-                )
-                .block(Block::default().borders(Borders::ALL).title(" Active Tasks "))
-                .header(
-                    Row::new(vec!["Task ID"])
-                        .style(Style::default().fg(Color::Yellow))
-                        .bottom_margin(1),
-                );
+                let tasks_table = Table::new(task_rows, [Constraint::Percentage(100)])
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title(" Active Tasks "),
+                    )
+                    .header(
+                        Row::new(vec!["Task ID"])
+                            .style(Style::default().fg(Color::Yellow))
+                            .bottom_margin(1),
+                    );
 
                 f.render_widget(tasks_table, chunks[1]);
             } else {
-                let no_tasks = Paragraph::new("No active tasks")
-                    .block(Block::default().borders(Borders::ALL).title(" Active Tasks "));
+                let no_tasks = Paragraph::new("No active tasks").block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(" Active Tasks "),
+                );
                 f.render_widget(no_tasks, chunks[1]);
             }
         }

@@ -1,9 +1,9 @@
+use async_trait::async_trait;
+use chrono::Utc;
 use lazycelery::app::App;
 use lazycelery::broker::Broker;
 use lazycelery::error::BrokerError;
-use lazycelery::models::{Worker, WorkerStatus, Task, TaskStatus, Queue};
-use async_trait::async_trait;
-use chrono::Utc;
+use lazycelery::models::{Queue, Task, TaskStatus, Worker, WorkerStatus};
 
 // Integration test broker that returns realistic data
 struct IntegrationTestBroker;
@@ -20,7 +20,11 @@ impl Broker for IntegrationTestBroker {
                 hostname: "celery@worker-prod-1".to_string(),
                 status: WorkerStatus::Online,
                 concurrency: 8,
-                queues: vec!["default".to_string(), "priority".to_string(), "emails".to_string()],
+                queues: vec![
+                    "default".to_string(),
+                    "priority".to_string(),
+                    "emails".to_string(),
+                ],
                 active_tasks: vec!["task-001".to_string(), "task-002".to_string()],
                 processed: 15234,
                 failed: 23,
@@ -144,50 +148,54 @@ impl Broker for IntegrationTestBroker {
 async fn test_full_application_flow() {
     let broker = Box::new(IntegrationTestBroker);
     let mut app = App::new(broker);
-    
+
     // Initial state
     assert_eq!(app.workers.len(), 0);
     assert_eq!(app.tasks.len(), 0);
     assert_eq!(app.queues.len(), 0);
-    
+
     // Refresh data
     app.refresh_data().await.unwrap();
-    
+
     // Verify data loaded
     assert_eq!(app.workers.len(), 3);
     assert_eq!(app.tasks.len(), 5);
     assert_eq!(app.queues.len(), 4);
-    
+
     // Test worker details
-    let online_workers: Vec<_> = app.workers.iter()
+    let online_workers: Vec<_> = app
+        .workers
+        .iter()
         .filter(|w| w.status == WorkerStatus::Online)
         .collect();
     assert_eq!(online_workers.len(), 2);
-    
+
     // Test task filtering
     app.search_query = "email".to_string();
     let filtered = app.get_filtered_tasks();
     assert_eq!(filtered.len(), 1);
     assert_eq!(filtered[0].name, "app.tasks.send_welcome_email");
-    
+
     // Test queue status
-    let empty_queues: Vec<_> = app.queues.iter()
-        .filter(|q| q.is_empty())
-        .collect();
+    let empty_queues: Vec<_> = app.queues.iter().filter(|q| q.is_empty()).collect();
     assert_eq!(empty_queues.len(), 1);
     assert_eq!(empty_queues[0].name, "background");
-    
+
     // Test worker utilization
     assert_eq!(app.workers[0].utilization(), 25.0); // 2 active out of 8
-    assert_eq!(app.workers[1].utilization(), 0.0);  // 0 active out of 8
-    
+    assert_eq!(app.workers[1].utilization(), 0.0); // 0 active out of 8
+
     // Test task status counts
-    let active_tasks = app.tasks.iter()
+    let active_tasks = app
+        .tasks
+        .iter()
         .filter(|t| t.status == TaskStatus::Active)
         .count();
     assert_eq!(active_tasks, 2);
-    
-    let failed_tasks = app.tasks.iter()
+
+    let failed_tasks = app
+        .tasks
+        .iter()
         .filter(|t| t.status == TaskStatus::Failure)
         .count();
     assert_eq!(failed_tasks, 1);
@@ -197,16 +205,16 @@ async fn test_full_application_flow() {
 async fn test_navigation_and_selection() {
     let broker = Box::new(IntegrationTestBroker);
     let mut app = App::new(broker);
-    
+
     app.refresh_data().await.unwrap();
-    
+
     // Test tab navigation
     assert_eq!(app.selected_tab, lazycelery::app::Tab::Workers);
     app.next_tab();
     assert_eq!(app.selected_tab, lazycelery::app::Tab::Queues);
     app.next_tab();
     assert_eq!(app.selected_tab, lazycelery::app::Tab::Tasks);
-    
+
     // Test item selection
     app.selected_tab = lazycelery::app::Tab::Workers;
     assert_eq!(app.selected_worker, 0);
@@ -216,7 +224,7 @@ async fn test_navigation_and_selection() {
     assert_eq!(app.selected_worker, 2);
     app.select_next();
     assert_eq!(app.selected_worker, 0); // Wraps around
-    
+
     // Test queue selection
     app.selected_tab = lazycelery::app::Tab::Queues;
     app.selected_queue = 0;

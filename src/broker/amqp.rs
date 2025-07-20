@@ -32,4 +32,8 @@ impl Broker for AmqpBroker {
     async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
         Err(BrokerError::NotImplemented)
     }
+
+    async fn purge_queue(&self, _queue_name: &str) -> Result<u64, BrokerError> {
+        Err(BrokerError::NotImplemented)
+    }
 }

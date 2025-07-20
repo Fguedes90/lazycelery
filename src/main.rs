@@ -108,7 +108,21 @@ async fn run_app(
             event = next_event(tick_rate) => {
                 match event? {
                     AppEvent::Key(key) => {
+                        // Check if confirmation dialog needs execution
+                        let should_execute = app.show_confirmation && matches!(
+                            key.code,
+                            crossterm::event::KeyCode::Char('y') |
+                            crossterm::event::KeyCode::Char('Y') |
+                            crossterm::event::KeyCode::Enter
+                        );
+
                         handle_key_event(key, app);
+
+                        // Execute pending action if confirmed
+                        if should_execute {
+                            app.execute_pending_action().await?;
+                        }
+
                         if app.should_quit {
                             return Ok(());
                         }

@@ -44,3 +44,14 @@ tarpaulin-report.html
 # Backup files
 *.bak
 *.orig
+
+# Development and testing files
+test_env/
+__pycache__/
+*.pyc
+*.pyo
+test_*.py
+test_*.rs
+*.pid
+MVP_DEVELOPMENT_PLAN.md
+celery_worker.log

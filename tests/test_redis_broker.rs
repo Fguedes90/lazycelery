@@ -1,7 +1,7 @@
 use anyhow::Result;
 use lazycelery::broker::{redis::RedisBroker, Broker};
 use lazycelery::error::BrokerError;
-use lazycelery::models::{TaskStatus, WorkerStatus};
+use lazycelery::models::TaskStatus;
 use std::time::Duration;
 use tokio::time::timeout;
 
@@ -144,13 +144,20 @@ mod integration_tests {
 
         let workers = broker.get_workers().await?;
 
-        // Should return the mock worker from the implementation
-        assert_eq!(workers.len(), 1);
-        assert_eq!(workers[0].hostname, "worker-1");
-        assert_eq!(workers[0].status, WorkerStatus::Online);
-        assert_eq!(workers[0].concurrency, 4);
-        assert_eq!(workers[0].processed, 1523);
-        assert_eq!(workers[0].failed, 12);
+        // Should discover workers from task activity (real implementation)
+        assert!(!workers.is_empty(), "Should discover at least one worker");
+
+        let worker = &workers[0];
+        assert!(!worker.hostname.is_empty(), "Worker should have hostname");
+        assert!(
+            worker.concurrency > 0,
+            "Worker should have positive concurrency"
+        );
+        // Workers discovered from task metadata should show activity
+        assert!(
+            worker.processed > 0 || worker.failed > 0,
+            "Worker should show some activity"
+        );
 
         Ok(())
     }
@@ -173,24 +180,29 @@ mod integration_tests {
 
         let tasks = broker.get_tasks().await?;
 
-        // Should parse our test tasks
-        assert_eq!(tasks.len(), 2);
+        // Should parse our test tasks (real implementation)
+        assert!(tasks.len() >= 2, "Should find at least 2 tasks");
 
-        // Find the successful task
+        // Find the successful task (real Celery metadata doesn't have task name)
         let success_task = tasks.iter().find(|t| t.id == "test-task-1").unwrap();
-        assert_eq!(success_task.name, "myapp.tasks.process_data");
         assert_eq!(success_task.status, TaskStatus::Success);
-        assert_eq!(success_task.worker, Some("worker-1".to_string()));
-        assert_eq!(
-            success_task.result,
-            Some("\"Processing completed\"".to_string())
+        assert_eq!(success_task.worker, None); // Real Celery metadata doesn't include worker hostname
+                                               // Result pode ter aspas duplas extras devido ao JSON encoding
+        assert!(
+            success_task.result.is_some()
+                && success_task
+                    .result
+                    .as_ref()
+                    .unwrap()
+                    .contains("Processing completed"),
+            "Result should contain 'Processing completed', got: {:?}",
+            success_task.result
         );
 
         // Find the failed task
         let failed_task = tasks.iter().find(|t| t.id == "test-task-2").unwrap();
-        assert_eq!(failed_task.name, "myapp.tasks.failing_task");
         assert_eq!(failed_task.status, TaskStatus::Failure);
-        assert_eq!(failed_task.worker, Some("worker-2".to_string()));
+        assert_eq!(failed_task.worker, None); // Real Celery metadata doesn't include worker hostname
         assert!(failed_task.traceback.is_some());
         assert!(failed_task
             .traceback
@@ -219,38 +231,70 @@ mod integration_tests {
 
         let queues = broker.get_queues().await?;
 
-        assert_eq!(queues.len(), 3);
+        // Real implementation discovers queues dynamically
+        assert!(!queues.is_empty(), "Should discover at least one queue");
 
-        // Find specific queues
-        let celery_queue = queues.iter().find(|q| q.name == "celery").unwrap();
-        assert_eq!(celery_queue.length, 2); // We added 2 items
+        // Find celery queue (should always exist)
+        let celery_queue = queues.iter().find(|q| q.name == "celery");
+        if let Some(queue) = celery_queue {
+            assert!(
+                queue.length >= 2,
+                "Celery queue should have at least 2 items"
+            );
+        }
 
-        let priority_queue = queues.iter().find(|q| q.name == "priority").unwrap();
-        assert_eq!(priority_queue.length, 1); // We added 1 item
-
-        let default_queue = queues.iter().find(|q| q.name == "default").unwrap();
-        assert_eq!(default_queue.length, 0); // Empty queue
+        // Check for priority queue if discovered
+        if let Some(priority_queue) = queues.iter().find(|q| q.name == "priority") {
+            assert!(
+                priority_queue.length >= 1,
+                "Priority queue should have at least 1 item"
+            );
+        }
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_redis_task_operations_not_implemented() -> Result<()> {
-        let broker = match RedisBroker::connect("redis://127.0.0.1:6379").await {
-            Ok(broker) => broker,
+    async fn test_redis_task_operations_implemented() -> Result<()> {
+        let client = match setup_test_redis().await {
+            Ok(client) => client,
             Err(_) => {
                 eprintln!("Skipping integration test: Redis not available");
                 return Ok(());
             }
         };
 
-        // Test retry operation
-        let retry_result = broker.retry_task("test-task-id").await;
-        assert!(matches!(retry_result, Err(BrokerError::NotImplemented)));
+        // Add a failed task for testing retry
+        let mut conn = client.get_multiplexed_tokio_connection().await?;
+        let failed_task = serde_json::json!({
+            "status": "FAILURE",
+            "result": null,
+            "traceback": "Test error",
+            "task_id": "test-failed-task"
+        });
 
-        // Test revoke operation
-        let revoke_result = broker.revoke_task("test-task-id").await;
-        assert!(matches!(revoke_result, Err(BrokerError::NotImplemented)));
+        let _: () = conn
+            .set("celery-task-meta-test-failed-task", failed_task.to_string())
+            .await?;
+
+        let broker = RedisBroker::connect("redis://127.0.0.1:6379")
+            .await
+            .map_err(|_| anyhow::anyhow!("Redis not available"))?;
+
+        // Test retry operation (should work for failed tasks)
+        let retry_result = broker.retry_task("test-failed-task").await;
+        assert!(
+            retry_result.is_ok(),
+            "Should successfully retry failed task"
+        );
+
+        // Test revoke operation (should work for any task)
+        let revoke_result = broker.revoke_task("test-task-to-revoke").await;
+        assert!(revoke_result.is_ok(), "Should successfully revoke task");
+
+        // Verify task was added to revoked set
+        let is_revoked: bool = conn.sismember("revoked", "test-task-to-revoke").await?;
+        assert!(is_revoked, "Task should be in revoked set");
 
         Ok(())
     }

@@ -1,0 +1,178 @@
+# mise configuration for LazyCelery
+# https://mise.jdx.dev/
+
+[env]
+RUST_LOG = "info"
+RUST_BACKTRACE = "1"
+
+[tools]
+rust = "1.88.0"
+git-cliff = "latest"
+
+[tasks.build]
+description = "Build the project in release mode"
+run = "cargo build --release"
+
+[tasks.dev]
+description = "Run in development mode with auto-reload"
+run = [
+    "cargo install cargo-watch",
+    "cargo watch -x 'run -- --broker redis://localhost:6379/0'"
+]
+
+[tasks.test]
+description = "Run all tests"
+run = "cargo test --all-features"
+
+[tasks.test-watch]
+description = "Run tests in watch mode"
+run = "cargo watch -x test"
+
+[tasks.lint]
+description = "Run clippy linter"
+run = "cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.fmt]
+description = "Format code"
+run = "cargo fmt --all"
+
+[tasks.check]
+description = "Check formatting and linting"
+run = [
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets --all-features -- -D warnings"
+]
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = [
+    "cargo clean",
+    "rm -rf target/"
+]
+
+[tasks.audit]
+description = "Run security audit"
+run = [
+    "cargo install cargo-audit",
+    "cargo audit"
+]
+
+[tasks.coverage]
+description = "Generate test coverage report"
+run = [
+    "cargo install cargo-tarpaulin",
+    "cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out html"
+]
+
+[tasks.docs]
+description = "Generate and open documentation"
+run = "cargo doc --no-deps --open"
+
+[tasks.install]
+description = "Install locally"
+run = "cargo install --path ."
+
+[tasks.run]
+description = "Run with Redis broker"
+run = "cargo run -- --broker redis://localhost:6379/0"
+depends = ["redis-start"]
+
+[tasks.redis-start]
+description = "Start Redis server using Docker"
+run = """
+if ! docker ps | grep -q lazycelery-redis; then
+    docker run -d --name lazycelery-redis -p 6379:6379 redis:alpine
+    echo "Redis started on port 6379"
+else
+    echo "Redis already running"
+fi
+"""
+
+[tasks.redis-stop]
+description = "Stop Redis server"
+run = """
+docker stop lazycelery-redis 2>/dev/null || true
+docker rm lazycelery-redis 2>/dev/null || true
+echo "Redis stopped"
+"""
+
+[tasks.docker-build]
+description = "Build Docker image"
+run = "docker build -t lazycelery:latest ."
+
+[tasks.docker-run]
+description = "Run Docker container"
+run = "docker run -it --rm --network host lazycelery:latest --broker redis://localhost:6379/0"
+depends = ["docker-build", "redis-start"]
+
+[tasks.release]
+description = "Create a release build"
+run = "cargo build --release --locked"
+
+[tasks.pre-commit]
+description = "Run pre-commit checks"
+run = [
+    "mise run fmt",
+    "mise run lint",
+    "mise run test",
+    "mise run audit"
+]
+
+[tasks.changelog]
+description = "Generate changelog"
+run = "git-cliff -o CHANGELOG.md"
+
+[tasks.version-bump]
+description = "Bump version (specify: patch, minor, or major)"
+run = """
+if [ -z "$1" ]; then
+    echo "Usage: mise run version-bump [patch|minor|major]"
+    exit 1
+fi
+cargo install cargo-edit
+cargo set-version --bump $1
+NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+echo "Bumped version to $NEW_VERSION"
+"""
+
+[tasks.setup]
+description = "Setup development environment"
+run = [
+    "rustup component add rustfmt clippy",
+    "mise install",
+    "mise run redis-start",
+    "echo 'Development environment ready!'"
+]
+
+[tasks.bench]
+description = "Run benchmarks"
+run = "cargo bench"
+
+[tasks.all]
+description = "Run all checks (lint, test, audit)"
+depends = ["lint", "test", "audit"]
+
+[tasks.help]
+description = "Show available tasks"
+run = "mise tasks"
+
+# CI/CD specific tasks
+[tasks.ci-fmt]
+description = "Check formatting for CI"
+run = "cargo fmt --all -- --check"
+
+[tasks.ci-lint]
+description = "Run linting for CI"
+run = "cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.ci-test]
+description = "Run tests for CI"
+run = "cargo test --all-features --verbose"
+
+[tasks.ci-audit]
+description = "Run security audit for CI"
+run = "cargo audit"
+
+[tasks.ci-all]
+description = "Run all CI checks"
+depends = ["ci-fmt", "ci-lint", "ci-test", "ci-audit"]

@@ -23,6 +23,9 @@ mise run setup                          # Setup development environment
 mise run redis-start                    # Start Redis server via Docker
 mise run redis-stop                     # Stop Redis server
 
+# Git hooks setup (run once after cloning):
+git config core.hooksPath .githooks     # Enable pre-commit quality checks
+
 # Specific commands for development:
 cargo test --test integration           # Run specific test file
 cargo test worker::tests               # Run specific module tests

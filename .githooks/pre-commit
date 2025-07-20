@@ -1,0 +1,61 @@
+#!/bin/sh
+#
+# Pre-commit hook for LazyCelery
+# Runs formatting, linting, and tests before allowing commit
+#
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if mise is available
+if ! command -v mise &> /dev/null; then
+    echo "❌ mise is required but not installed. Please install mise first."
+    exit 1
+fi
+
+# 1. Check formatting
+echo "📝 Checking code formatting..."
+if ! mise run fmt -- --check; then
+    echo "❌ Code formatting check failed!"
+    echo "💡 Run 'mise run fmt' to fix formatting issues"
+    exit 1
+fi
+echo "✅ Code formatting is correct"
+
+# 2. Run linting
+echo "🔍 Running clippy lints..."
+if ! mise run lint; then
+    echo "❌ Linting failed!"
+    echo "💡 Fix the clippy warnings above"
+    exit 1
+fi
+echo "✅ All linting checks passed"
+
+# 3. Run tests (excluding integration tests that require Redis)
+echo "🧪 Running tests..."
+if ! cargo test --lib --bins; then
+    echo "❌ Unit tests failed!"
+    echo "💡 Fix the failing tests above"
+    exit 1
+fi
+echo "✅ Unit tests passed"
+
+echo "🧪 Running non-Redis integration tests..."
+if ! cargo test --test test_app --test test_config --test test_error --test test_event_handling --test test_models --test test_ui_widgets --test test_utils; then
+    echo "❌ Integration tests failed!"
+    echo "💡 Fix the failing tests above"
+    exit 1
+fi
+echo "✅ Integration tests passed"
+
+# 4. Run security audit
+echo "🔒 Running security audit..."
+if ! mise run audit; then
+    echo "❌ Security audit failed!"
+    echo "💡 Fix the security issues above"
+    exit 1
+fi
+echo "✅ Security audit passed"
+
+echo "🎉 All pre-commit checks passed! Proceeding with commit..."

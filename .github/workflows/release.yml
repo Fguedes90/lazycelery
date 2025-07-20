@@ -198,3 +198,82 @@ jobs:
         files: ${{ env.ASSET_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crate:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: "publish-crate"
+        cache-directories: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+    
+    - name: Install mise
+      uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Publishing version: $VERSION"
+    
+    - name: Verify Cargo.toml version matches tag
+      run: |
+        TAG_VERSION="${{ steps.version.outputs.version }}"
+        CARGO_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "lazycelery") | .version')
+        echo "Tag version: $TAG_VERSION"
+        echo "Cargo.toml version: $CARGO_VERSION"
+        if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+          echo "❌ Version mismatch: tag=$TAG_VERSION, Cargo.toml=$CARGO_VERSION"
+          exit 1
+        fi
+        echo "✅ Version matches tag"
+    
+    - name: Run final quality checks before publish
+      run: |
+        echo "🔍 Running final checks before publishing..."
+        
+        # Format check
+        cargo fmt --all --check
+        
+        # Clippy check
+        cargo clippy --all-targets --all-features -- -D warnings
+        
+        # Test check
+        cargo test --lib --bins
+        
+        # Verify package can be built
+        cargo build --release --locked
+        
+        echo "✅ All checks passed"
+    
+    - name: Dry run publish (check package)
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        echo "🔍 Running dry-run publish to validate package..."
+        cargo publish --dry-run --locked
+        echo "✅ Dry-run successful"
+    
+    - name: Publish to crates.io
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        echo "📦 Publishing lazycelery v${{ steps.version.outputs.version }} to crates.io..."
+        cargo publish --locked
+        echo "✅ Successfully published to crates.io"
+        echo "🌐 Available at: https://crates.io/crates/lazycelery"

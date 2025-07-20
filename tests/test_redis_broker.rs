@@ -197,7 +197,10 @@ mod integration_tests {
             "traceback": "Traceback (most recent call last):\n  File...\nZeroDivisionError: division by zero"
         });
         let _: () = conn
-            .set("celery-task-meta-unique-test-task-2", failed_task_data.to_string())
+            .set(
+                "celery-task-meta-unique-test-task-2",
+                failed_task_data.to_string(),
+            )
             .await?;
 
         // Add small delay to ensure data is persisted in CI environment

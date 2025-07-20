@@ -1,0 +1,66 @@
+# Configuration for cargo-release
+
+# Whether to do a dry run by default
+dry-run = false
+
+# Whether to push to remote
+push = true
+
+# Whether to create a tag
+tag = true
+
+# The prefix to use for tags
+tag-prefix = "v"
+
+# The message to use for tags
+tag-message = "Release version {{version}}"
+
+# Whether to sign tags
+sign-tag = false
+
+# Whether to sign commits
+sign-commit = false
+
+# Whether to push tags
+push-tags = true
+
+# The remote to push to
+push-remote = "origin"
+
+# The branch to push to
+push-branch = "main"
+
+# Pre-release hooks
+pre-release-hook = ["cargo", "test", "--all-features"]
+
+# The replacements to perform
+[[pre-release-replacements]]
+file = "README.md"
+search = "lazycelery = \"[0-9]+\\.[0-9]+\\.[0-9]+\""
+replace = "lazycelery = \"{{version}}\""
+
+[[pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "## \\[Unreleased\\]"
+replace = "## [Unreleased]\n\n## [{{version}}] - {{date}}"
+exactly = 1
+
+# Dependencies to update
+enable-features = []
+
+# Whether to update dependencies
+consolidate-commits = true
+
+# The commit message
+pre-release-commit-message = "chore(release): prepare for {{version}}"
+
+# Whether to publish to crates.io
+publish = true
+
+# Whether to verify the package before publishing
+verify = true
+
+# Which crates to release
+# In a workspace, you can configure per-crate settings
+[workspace]
+members = []

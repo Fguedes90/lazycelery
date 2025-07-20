@@ -9,13 +9,15 @@ LazyCelery is a terminal UI for monitoring and managing Celery workers and tasks
 ## Development Commands
 
 ```bash
-# Once project is initialized with cargo init:
-cargo build                              # Build debug version
-cargo build --release                    # Build optimized release
-cargo run -- --broker redis://localhost:6379/0    # Run with Redis broker
-cargo test                              # Run all tests
-cargo fmt                               # Format code
-cargo clippy                            # Lint code
+# Development commands using mise:
+mise run build                          # Build release version
+mise run dev                            # Run with auto-reload
+mise run test                           # Run all tests
+mise run fmt                            # Format code
+mise run lint                           # Lint code (clippy)
+mise run audit                          # Security audit
+mise run coverage                       # Generate test coverage
+mise run pre-commit                     # Run all checks before committing
 ```
 
 ## Architecture Overview

@@ -13,7 +13,6 @@ test:
   - changed-files:
     - any-glob-to-any-file:
       - 'tests/**'
-      - 'benches/**'
       - '**/*_test.rs'
       - '**/test_*.rs'
 
@@ -65,8 +64,6 @@ config:
 # Add 'performance' label if PR title contains performance-related keywords
 performance:
   - head-branch: ['^perf', 'performance']
-  - changed-files:
-    - any-glob-to-any-file: ['benches/**']
 
 # Add 'breaking-change' label if PR title contains breaking change keywords
 breaking-change:

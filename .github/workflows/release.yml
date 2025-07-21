@@ -55,57 +55,25 @@ jobs:
           exit 0
         fi
         
-        # Check if we have any commits since last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        CURRENT_SHA=$(git rev-parse HEAD)
-        
-        if [ -n "$LAST_TAG" ]; then
-          LAST_TAG_SHA=$(git rev-list -n 1 $LAST_TAG)
-          COMMITS_SINCE_TAG=$(git rev-list $LAST_TAG..HEAD --count)
-          echo "Commits since last tag ($LAST_TAG): $COMMITS_SINCE_TAG"
-          echo "Last tag SHA: $LAST_TAG_SHA"
-          echo "Current SHA: $CURRENT_SHA"
+        # Simple check: if commit message indicates release need, proceed
+        if echo "$LAST_COMMIT" | grep -qE "^(feat|fix|refactor)(\(.+\))?:"; then
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "✅ Release needed based on commit message: $LAST_COMMIT"
           
-          # Check if current commit already has a tag (avoid duplicate releases)
-          if [ "$LAST_TAG_SHA" = "$CURRENT_SHA" ]; then
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "🚫 Current commit already has tag $LAST_TAG, avoiding duplicate release"
-            exit 0
-          fi
-          
-          # Check if we have commits since last tag OR if current commit indicates release needed
-          if [ "$COMMITS_SINCE_TAG" -eq 0 ]; then
-            # No commits since tag, but check if current commit message indicates release needed
-            if echo "$LAST_COMMIT" | grep -qE "^(feat|fix|refactor)(\(.+\))?:"; then
-              echo "🔄 No commits since last tag, but current commit indicates release needed"
-              COMMITS="$LAST_COMMIT"
-            else
-              echo "should_release=false" >> $GITHUB_OUTPUT
-              echo "🚫 No new commits since last release and current commit doesn't indicate release"
-              exit 0
-            fi
+          # Determine version bump type based on conventional commits
+          if echo "$LAST_COMMIT" | grep -qE "^(feat|feature)(\(.+\))?!:|^.+!:|BREAKING CHANGE"; then
+            echo "version_type=major" >> $GITHUB_OUTPUT
+            echo "🔥 Major release detected (breaking changes)"
+          elif echo "$LAST_COMMIT" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+            echo "version_type=minor" >> $GITHUB_OUTPUT
+            echo "✨ Minor release detected (new features)"
           else
-            # Get commits since last tag for analysis
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+            echo "🔧 Patch release detected (bug fixes/improvements)"
           fi
         else
-          echo "No previous tags found, this will be the first release"
-          COMMITS=$(git log --pretty=format:"%s")
-          COMMITS_SINCE_TAG=999
-        fi
-        
-        echo "should_release=true" >> $GITHUB_OUTPUT
-        
-        # Determine version bump type based on conventional commits
-        if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?!:|^.+!:|BREAKING CHANGE|^[a-z]+(\(.+\))?!:"; then
-          echo "version_type=major" >> $GITHUB_OUTPUT
-          echo "🔥 Major release detected (breaking changes)"
-        elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
-          echo "version_type=minor" >> $GITHUB_OUTPUT
-          echo "✨ Minor release detected (new features)"
-        else
-          echo "version_type=patch" >> $GITHUB_OUTPUT
-          echo "🔧 Patch release detected (bug fixes/improvements)"
+          echo "should_release=false" >> $GITHUB_OUTPUT
+          echo "🚫 No release needed - commit doesn't match release patterns"
         fi
   # Automatic release preparation
   auto-prepare-release:
@@ -139,31 +107,33 @@ jobs:
         cargo install cargo-edit
         mise install git-cliff
     
-    - name: Bump version automatically
+    - name: Determine and set version
       run: |
-        echo "Auto-bumping version (${{ needs.check-release.outputs.version_type }})"
+        echo "Determining version for release type: ${{ needs.check-release.outputs.version_type }}"
         
         # Get current version from Cargo.toml
         CURRENT_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
         echo "Current version in Cargo.toml: $CURRENT_VERSION"
         
-        # Check if we need to bump or if version was already manually bumped
+        # Get last tag version for comparison
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
         LAST_TAG_VERSION=${LAST_TAG#v}
         echo "Last tag version: $LAST_TAG_VERSION"
         
+        # Check if version was already manually bumped
         if [ "$CURRENT_VERSION" != "$LAST_TAG_VERSION" ]; then
-          echo "🔄 Version already manually bumped from $LAST_TAG_VERSION to $CURRENT_VERSION"
+          echo "✅ Version already manually set to $CURRENT_VERSION"
           NEW_VERSION="$CURRENT_VERSION"
         else
           echo "🚀 Auto-bumping version (${{ needs.check-release.outputs.version_type }})"
           cargo set-version --bump ${{ needs.check-release.outputs.version_type }}
           NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "✅ Version auto-bumped to $NEW_VERSION"
         fi
         
         echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
         echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-        echo "🚀 Final version: $NEW_VERSION"
+        echo "🎯 Release version: $NEW_VERSION"
       id: version
     
     - name: Update version in UI
@@ -177,14 +147,26 @@ jobs:
     - name: Run tests before release
       run: mise run test
     
-    - name: Commit and tag automatically
+    - name: Commit and tag release
       run: |
-        git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs
-        git commit -m "chore(release): prepare for v$NEW_VERSION [skip ci]"
-        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-        git push origin main
-        git push origin "v$NEW_VERSION"
-        echo "✅ Automatically created release v$NEW_VERSION"
+        # Check if there are changes to commit
+        if git diff --cached --quiet && git diff --quiet; then
+          echo "📝 No changes to commit, proceeding with tag only"
+        else
+          echo "📝 Committing release changes"
+          git add Cargo.toml Cargo.lock CHANGELOG.md src/ui/mod.rs 2>/dev/null || true
+          git commit -m "chore(release): prepare for v$NEW_VERSION [skip ci]" || echo "No changes to commit"
+        fi
+        
+        # Create and push tag
+        echo "🏷️  Creating tag v$NEW_VERSION"
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION" || echo "Tag may already exist"
+        
+        echo "🚀 Pushing changes and tag"
+        git push origin main || true
+        git push origin "v$NEW_VERSION" || echo "Tag push may have failed, continuing..."
+        
+        echo "✅ Release preparation completed for v$NEW_VERSION"
 
   # Manual release preparation (kept for manual workflow_dispatch)
   prepare-release:

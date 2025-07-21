@@ -50,8 +50,8 @@ test_env/
 __pycache__/
 *.pyc
 *.pyo
-test_*.py
-test_*.rs
+# test_*.py
+# test_*.rs
 *.pid
 MVP_DEVELOPMENT_PLAN.md
 celery_worker.log

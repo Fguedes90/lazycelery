@@ -252,7 +252,7 @@ jobs:
     
     - name: Create Release
       id: create_release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
         name: LazyCelery v${{ steps.version.outputs.version }}
@@ -323,7 +323,7 @@ jobs:
         echo "ASSET_PATH=${{ matrix.name }}.zip" >> $env:GITHUB_ENV
     
     - name: Upload Release Asset
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
         files: ${{ env.ASSET_PATH }}

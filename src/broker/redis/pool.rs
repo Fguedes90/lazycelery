@@ -114,14 +114,15 @@ impl ConnectionPool {
 
             // Quick health check for connections that haven't been used recently
             if pooled_conn.last_used.elapsed() > HEALTH_CHECK_INTERVAL
-                && !pooled_conn.health_check().await {
-                    // Connection is unhealthy, create a new one
-                    drop(connections); // Release lock before creating new connection
-                    return self
-                        .create_connection_with_retry()
-                        .await
-                        .map(|conn| conn.connection);
-                }
+                && !pooled_conn.health_check().await
+            {
+                // Connection is unhealthy, create a new one
+                drop(connections); // Release lock before creating new connection
+                return self
+                    .create_connection_with_retry()
+                    .await
+                    .map(|conn| conn.connection);
+            }
 
             let connection = pooled_conn.connection.clone();
             connections.push(pooled_conn); // Return to pool
@@ -173,6 +174,7 @@ impl ConnectionPool {
         ))
     }
 
+    #[allow(dead_code)]
     pub async fn return_connection(&self, connection: MultiplexedConnection) {
         let mut connections = self.connections.lock().await;
         if connections.len() < self.max_size {
@@ -198,6 +200,7 @@ impl ConnectionPool {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn close(&self) {
         let mut connections = self.connections.lock().await;
         connections.clear();

@@ -32,7 +32,7 @@ impl TestDatabase {
             return Err(anyhow::anyhow!("Too many concurrent tests"));
         }
 
-        let url = format!("redis://127.0.0.1:6379/{}", db_id);
+        let url = format!("redis://127.0.0.1:6379/{db_id}");
 
         Ok(TestDatabase {
             database_id: db_id,
@@ -85,6 +85,7 @@ pub struct TestDataBuilder {
     client: Client,
 }
 
+#[allow(dead_code)]
 impl TestDataBuilder {
     pub fn new(client: Client) -> Self {
         Self { client }
@@ -259,7 +260,7 @@ impl TestDataBuilder {
 
             let _: () = conn
                 .set(
-                    format!("celery-task-meta-perf-task-{}", i),
+                    format!("celery-task-meta-perf-task-{i}"),
                     task_data.to_string(),
                 )
                 .await?;
@@ -305,7 +306,7 @@ impl TestDataBuilder {
 
         let _: () = conn
             .set(
-                format!("celery-task-meta-{}", task_id),
+                format!("celery-task-meta-{task_id}"),
                 failed_task.to_string(),
             )
             .await?;
@@ -335,10 +336,7 @@ impl TestDataBuilder {
         }
 
         let _: () = conn
-            .set(
-                format!("celery-task-meta-{}", task_id),
-                task_data.to_string(),
-            )
+            .set(format!("celery-task-meta-{task_id}"), task_data.to_string())
             .await?;
 
         Ok(())
@@ -348,6 +346,7 @@ impl TestDataBuilder {
 /// Assertion helpers for test validation
 pub struct TestAssertions;
 
+#[allow(dead_code)]
 impl TestAssertions {
     /// Assert that a task has expected properties
     pub fn assert_task_properties(
@@ -369,24 +368,18 @@ impl TestAssertions {
         );
 
         if should_have_result {
-            assert!(
-                task.result.is_some(),
-                "Task {} should have a result",
-                task_id
-            );
+            assert!(task.result.is_some(), "Task {task_id} should have a result");
         } else {
             assert!(
                 task.result.is_none() || task.result.as_ref().unwrap().is_empty(),
-                "Task {} should not have a result",
-                task_id
+                "Task {task_id} should not have a result"
             );
         }
 
         if should_have_traceback {
             assert!(
                 task.traceback.is_some(),
-                "Task {} should have a traceback",
-                task_id
+                "Task {task_id} should have a traceback"
             );
         }
     }
@@ -448,7 +441,7 @@ impl TestAssertions {
             let queue = queues
                 .iter()
                 .find(|q| q.name == queue_name)
-                .unwrap_or_else(|| panic!("Queue {} not found", queue_name));
+                .unwrap_or_else(|| panic!("Queue {queue_name} not found"));
 
             assert!(
                 queue.length >= min_length as u64,
@@ -470,9 +463,9 @@ impl TestAssertions {
         let exists: bool = conn.exists(key).await?;
 
         if should_exist {
-            assert!(exists, "Redis key {} should exist", key);
+            assert!(exists, "Redis key {key} should exist");
         } else {
-            assert!(!exists, "Redis key {} should not exist", key);
+            assert!(!exists, "Redis key {key} should not exist");
         }
 
         Ok(())
@@ -488,9 +481,9 @@ impl TestAssertions {
         let is_revoked: bool = conn.sismember("revoked", task_id).await?;
 
         if should_be_revoked {
-            assert!(is_revoked, "Task {} should be in revoked set", task_id);
+            assert!(is_revoked, "Task {task_id} should be in revoked set");
         } else {
-            assert!(!is_revoked, "Task {} should not be in revoked set", task_id);
+            assert!(!is_revoked, "Task {task_id} should not be in revoked set");
         }
 
         Ok(())
@@ -504,7 +497,7 @@ impl TestAssertions {
         should_have_retries: bool,
     ) -> Result<()> {
         let mut conn = client.get_multiplexed_tokio_connection().await?;
-        let key = format!("celery-task-meta-{}", task_id);
+        let key = format!("celery-task-meta-{task_id}");
 
         let data: String = conn.get(&key).await?;
         let task_json: serde_json::Value = serde_json::from_str(&data)?;
@@ -517,7 +510,7 @@ impl TestAssertions {
 
         if should_have_retries {
             let retries = task_json["retries"].as_i64().unwrap_or(0);
-            assert!(retries > 0, "Task {} should have retries > 0", task_id);
+            assert!(retries > 0, "Task {task_id} should have retries > 0");
         }
 
         Ok(())

@@ -17,6 +17,7 @@ pub struct RedisConnection {
 
 #[allow(deprecated)]
 impl RedisConnection {
+    #[allow(dead_code)]
     pub async fn new(url: &str) -> Result<Self, BrokerError> {
         debug!("Creating legacy RedisConnection - consider using BrokerFacade instead");
 

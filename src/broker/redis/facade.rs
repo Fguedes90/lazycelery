@@ -199,6 +199,7 @@ impl BrokerFacade {
     }
 
     /// Get statistics about the connection pool
+    #[allow(dead_code)]
     pub async fn get_pool_stats(&self) -> PoolStats {
         // This is a simplified implementation - in a real scenario,
         // we'd track more detailed statistics
@@ -238,6 +239,7 @@ impl BrokerFacade {
 
 /// Statistics about the connection pool
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PoolStats {
     pub active_connections: usize,
     pub total_connections: usize,

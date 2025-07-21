@@ -22,7 +22,10 @@ pub struct RedisBroker {
 impl Broker for RedisBroker {
     async fn connect(url: &str) -> Result<Self, BrokerError> {
         info!("Connecting to Redis broker using facade pattern");
-        debug!("Redis URL: {}", url.split('@').next_back().unwrap_or("hidden"));
+        debug!(
+            "Redis URL: {}",
+            url.split('@').next_back().unwrap_or("hidden")
+        );
 
         let facade = BrokerFacade::new(url).await?;
 

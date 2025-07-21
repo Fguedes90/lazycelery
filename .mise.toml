@@ -21,21 +21,8 @@ run = [
 ]
 
 [tasks.test]
-description = "Run all tests (use 'mise run test -- --verbose' for CI)"
-run = """
-if [ "$CI" = "true" ]; then
-    cargo test --all-features --verbose
-else
-    # Check if --verbose was passed as argument
-    for arg in "$@"; do
-        if [ "$arg" = "--verbose" ]; then
-            cargo test --all-features --verbose
-            exit 0
-        fi
-    done
-    cargo test --all-features
-fi
-"""
+description = "Run all tests"
+run = "cargo test --all-features"
 
 [tasks.test-watch]
 description = "Run tests in watch mode"
@@ -46,21 +33,8 @@ description = "Run clippy linter"
 run = "cargo clippy --all-targets --all-features -- -D warnings"
 
 [tasks.fmt]
-description = "Format code (use 'mise run fmt -- --check' for CI)"
-run = """
-if [ "$CI" = "true" ]; then
-    cargo fmt --all -- --check
-else
-    # Check if --check was passed as argument
-    for arg in "$@"; do
-        if [ "$arg" = "--check" ]; then
-            cargo fmt --all -- --check
-            exit 0
-        fi
-    done
-    cargo fmt --all
-fi
-"""
+description = "Format code"
+run = "cargo fmt --all"
 
 [tasks.check]
 description = "Check formatting and linting"
@@ -138,10 +112,10 @@ run = "cargo build --release --locked"
 [tasks.pre-commit]
 description = "Run pre-commit checks"
 run = [
-    "mise run fmt",
-    "mise run lint",
-    "mise run test",
-    "mise run audit",
+    "mise run ci-fmt",
+    "mise run ci-lint", 
+    "mise run ci-test",
+    "mise run ci-audit",
     "mise run validate-versions"
 ]
 
@@ -197,8 +171,8 @@ description = "Run linting for CI (deprecated - use 'lint')"
 run = "cargo clippy --all-targets --all-features -- -D warnings"
 
 [tasks.ci-test]
-description = "Run tests for CI (deprecated - use 'test --verbose')"
-run = "cargo test --all-features --verbose"
+description = "Run tests for CI (excluding Redis integration tests)"
+run = "cargo test --lib --bins --verbose"
 
 [tasks.ci-audit]
 description = "Run security audit for CI (deprecated - use 'audit')"

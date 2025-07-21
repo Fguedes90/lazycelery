@@ -188,9 +188,7 @@ impl ProtocolParser {
         if workers.is_empty() {
             let celery_queue_len: u64 = conn.llen("celery").await.unwrap_or(0);
             let task_keys: Vec<String> = conn.keys("celery-task-meta-*").await.map_err(|e| {
-                BrokerError::OperationError(format!(
-                    "Failed to check for task metadata keys: {e}"
-                ))
+                BrokerError::OperationError(format!("Failed to check for task metadata keys: {e}"))
             })?;
             let task_count = task_keys.len();
 

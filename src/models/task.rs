@@ -25,6 +25,7 @@ pub enum TaskStatus {
 }
 
 impl Task {
+    /// Basic constructor for creating a new Task - kept for future API use
     #[allow(dead_code)]
     pub fn new(id: String, name: String) -> Self {
         Self {

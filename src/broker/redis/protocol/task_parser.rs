@@ -165,7 +165,13 @@ impl TaskParser {
             status,
             worker: None, // Task metadata doesn't contain worker hostname
             timestamp,
-            result: task_data.get("result").map(|r| r.to_string()),
+            result: task_data.get("result").and_then(|r| {
+                if r.is_null() {
+                    None
+                } else {
+                    Some(r.to_string())
+                }
+            }),
             traceback: task_data
                 .get("traceback")
                 .and_then(|t| t.as_str())

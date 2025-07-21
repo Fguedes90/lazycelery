@@ -18,6 +18,7 @@ pub enum WorkerStatus {
 }
 
 impl Worker {
+    /// Basic constructor for creating a new Worker - kept for future API use
     #[allow(dead_code)]
     pub fn new(hostname: String) -> Self {
         Self {

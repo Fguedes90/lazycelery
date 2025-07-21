@@ -1,4 +1,3 @@
-pub mod connection;
 pub mod facade;
 pub mod operations;
 pub mod pool;

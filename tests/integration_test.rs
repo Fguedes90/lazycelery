@@ -50,12 +50,28 @@ async fn test_full_application_flow() {
     assert_eq!(app.queues[0].name, "default");
     assert_eq!(app.queues[0].length, 42);
 
-    // Test navigation between tabs
-    app.next_tab();
-    app.next_tab();
-    app.previous_tab();
+    // Test navigation: Workers -> Queues -> Tasks -> Queues
+    app.next_tab(); // Workers -> Queues
+    app.next_tab(); // Queues -> Tasks
+    app.previous_tab(); // Tasks -> Queues
 
-    // Test item selection
+    // Should be on Queues tab now, so test queue selection
+    app.select_next();
+    assert_eq!(app.selected_queue, 1);
+
+    app.select_previous();
+    assert_eq!(app.selected_queue, 0);
+
+    // Go to Tasks tab to test task selection
+    app.next_tab(); // Queues -> Tasks
+    app.select_next();
+    assert_eq!(app.selected_task, 1);
+
+    app.select_previous();
+    assert_eq!(app.selected_task, 0);
+
+    // Go back to Workers tab to test worker selection
+    app.next_tab(); // Tasks -> Workers
     app.select_next();
     assert_eq!(app.selected_worker, 1);
 

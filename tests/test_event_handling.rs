@@ -10,66 +10,72 @@ use test_broker_utils::MockBrokerBuilder;
 fn create_test_app() -> App {
     // Use consolidated mock broker with custom test data for navigation
     let broker = MockBrokerBuilder::new()
-        .with_workers(vec![
-            Worker {
-                hostname: "worker-1".to_string(),
-                status: WorkerStatus::Online,
-                concurrency: 4,
-                queues: vec!["default".to_string()],
-                active_tasks: vec![],
-                processed: 100,
-                failed: 5,
-            },
-            Worker {
-                hostname: "worker-2".to_string(),
-                status: WorkerStatus::Offline,
-                concurrency: 8,
-                queues: vec!["celery".to_string()],
-                active_tasks: vec![],
-                processed: 250,
-                failed: 12,
-            },
-        ])
-        .with_tasks(vec![
-            Task {
-                id: "task-1".to_string(),
-                name: "myapp.tasks.process_data".to_string(),
-                args: "[]".to_string(),
-                kwargs: "{}".to_string(),
-                status: TaskStatus::Success,
-                worker: Some("worker-1".to_string()),
-                timestamp: Utc::now(),
-                result: None,
-                traceback: None,
-            },
-            Task {
-                id: "task-2".to_string(),
-                name: "myapp.tasks.another_task".to_string(),
-                args: "[]".to_string(),
-                kwargs: "{}".to_string(),
-                status: TaskStatus::Failure,
-                worker: Some("worker-2".to_string()),
-                timestamp: Utc::now(),
-                result: None,
-                traceback: None,
-            },
-        ])
-        .with_queues(vec![
-            lazycelery::models::Queue {
-                name: "default".to_string(),
-                length: 10,
-                consumers: 2,
-            },
-            lazycelery::models::Queue {
-                name: "priority".to_string(),
-                length: 5,
-                consumers: 1,
-            },
-        ])
         .with_not_implemented_operations()
         .build();
 
-    App::new(broker)
+    let mut app = App::new(broker);
+
+    // Manually populate data for tests (sync version)
+    app.workers = vec![
+        Worker {
+            hostname: "worker-1".to_string(),
+            status: WorkerStatus::Online,
+            concurrency: 4,
+            queues: vec!["default".to_string()],
+            active_tasks: vec![],
+            processed: 100,
+            failed: 5,
+        },
+        Worker {
+            hostname: "worker-2".to_string(),
+            status: WorkerStatus::Offline,
+            concurrency: 8,
+            queues: vec!["celery".to_string()],
+            active_tasks: vec![],
+            processed: 250,
+            failed: 12,
+        },
+    ];
+
+    app.tasks = vec![
+        Task {
+            id: "task-1".to_string(),
+            name: "myapp.tasks.process_data".to_string(),
+            args: "[]".to_string(),
+            kwargs: "{}".to_string(),
+            status: TaskStatus::Success,
+            worker: Some("worker-1".to_string()),
+            timestamp: Utc::now(),
+            result: None,
+            traceback: None,
+        },
+        Task {
+            id: "task-2".to_string(),
+            name: "myapp.tasks.another_task".to_string(),
+            args: "[]".to_string(),
+            kwargs: "{}".to_string(),
+            status: TaskStatus::Failure,
+            worker: Some("worker-2".to_string()),
+            timestamp: Utc::now(),
+            result: None,
+            traceback: None,
+        },
+    ];
+
+    app.queues = vec![
+        lazycelery::models::Queue {
+            name: "default".to_string(),
+            length: 10,
+            consumers: 2,
+        },
+        lazycelery::models::Queue {
+            name: "priority".to_string(),
+            length: 5,
+            consumers: 1,
+        },
+    ];
+
+    app
 }
 
 fn create_key_event(code: KeyCode) -> KeyEvent {

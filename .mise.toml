@@ -112,10 +112,10 @@ run = "cargo build --release --locked"
 [tasks.pre-commit]
 description = "Run pre-commit checks"
 run = [
-    "mise run ci-fmt",
-    "mise run ci-lint", 
-    "mise run ci-test",
-    "mise run ci-audit",
+    "mise run fmt",
+    "mise run lint", 
+    "mise run test",
+    "mise run audit",
     "mise run validate-versions"
 ]
 
@@ -161,26 +161,3 @@ run = "python3 scripts/validate-versions.py"
 description = "Fix version inconsistencies automatically"
 run = "python3 scripts/validate-versions.py --fix"
 
-# CI/CD compatibility tasks (deprecated - use main tasks with CI=true)
-[tasks.ci-fmt]
-description = "Check formatting for CI (deprecated - use 'fmt --check')"
-run = "cargo fmt --all -- --check"
-
-[tasks.ci-lint]
-description = "Run linting for CI (deprecated - use 'lint')"
-run = "cargo clippy --all-targets --all-features -- -D warnings"
-
-[tasks.ci-test]
-description = "Run tests for CI (excluding Redis integration tests)"
-run = "cargo test --lib --bins --verbose"
-
-[tasks.ci-audit]
-description = "Run security audit for CI (deprecated - use 'audit')"
-run = [
-    "cargo install cargo-audit",
-    "cargo audit"
-]
-
-[tasks.ci-all]
-description = "Run all CI checks (deprecated - use 'all')"
-depends = ["ci-fmt", "ci-lint", "ci-test", "ci-audit"]

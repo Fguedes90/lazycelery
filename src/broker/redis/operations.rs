@@ -13,8 +13,8 @@ mod validation {
     /// Maximum allowed length for queue names
     const MAX_QUEUE_NAME_LENGTH: usize = 255;
 
-    /// Valid characters for task IDs (UUID format)
-    const TASK_ID_CHARS: &str = "abcdefABCDEF0123456789-";
+    /// Valid characters for task IDs (UUID format and alphanumeric)
+    const TASK_ID_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.";
 
     /// Valid characters for queue names (alphanumeric, dots, underscores, hyphens)
     const QUEUE_NAME_CHARS: &str =

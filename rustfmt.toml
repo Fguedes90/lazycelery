@@ -13,11 +13,3 @@ remove_nested_parens = true
 match_arm_leading_pipes = "Never"
 merge_derives = true
 use_small_heuristics = "Default"
-
-# Removed nightly-only options to avoid warnings:
-# - format_code_in_doc_comments = true
-# - format_macro_matchers = true  
-# - format_macro_bodies = true
-# - hex_literal_case = "Lower"
-# - imports_granularity = "Crate"
-# - group_imports = "StdExternalCrate"

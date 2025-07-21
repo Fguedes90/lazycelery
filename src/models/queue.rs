@@ -8,6 +8,7 @@ pub struct Queue {
 }
 
 impl Queue {
+    /// Basic constructor for creating a new Queue - kept for future API use
     #[allow(dead_code)]
     pub fn new(name: String) -> Self {
         Self {

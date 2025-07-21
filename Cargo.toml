@@ -38,7 +38,6 @@ async-trait = "0.1"
 
 # Broker clients
 redis = { version = "0.24", features = ["tokio-comp"] }
-lapin = "2.3"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -61,4 +60,3 @@ tracing = "0.1"
 
 [dev-dependencies]
 tempfile = "3.8"
-mockall = "0.11"

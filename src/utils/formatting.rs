@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration, Utc};
 
+/// Format duration as HH:MM:SS or MM:SS - utility function for future UI features
 #[allow(dead_code)]
 pub fn format_duration(duration: Duration) -> String {
     let hours = duration.num_hours();
@@ -13,11 +14,13 @@ pub fn format_duration(duration: Duration) -> String {
     }
 }
 
+/// Format timestamp for display - utility function for future UI features
 #[allow(dead_code)]
 pub fn format_timestamp(timestamp: DateTime<Utc>) -> String {
     timestamp.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
+/// Truncate string with ellipsis - utility function for UI text overflow
 #[allow(dead_code)]
 pub fn truncate_string(s: &str, max_len: usize) -> String {
     if s.len() <= max_len {

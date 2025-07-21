@@ -16,7 +16,7 @@ fi
 
 # 1. Check formatting
 echo "📝 Checking code formatting..."
-if ! mise run ci-fmt; then
+if ! mise run fmt; then
     echo "❌ Code formatting check failed!"
     echo "💡 Run 'mise run fmt' to fix formatting issues"
     exit 1
@@ -25,16 +25,16 @@ echo "✅ Code formatting is correct"
 
 # 2. Run linting
 echo "🔍 Running clippy lints..."
-if ! mise run ci-lint; then
+if ! mise run lint; then
     echo "❌ Linting failed!"
     echo "💡 Fix the clippy warnings above"
     exit 1
 fi
 echo "✅ All linting checks passed"
 
-# 3. Run tests (excluding integration tests that require Redis)
+# 3. Run tests
 echo "🧪 Running tests..."
-if ! mise run ci-test; then
+if ! mise run test; then
     echo "❌ Tests failed!"
     echo "💡 Fix the failing tests above"
     exit 1
@@ -43,7 +43,7 @@ echo "✅ Tests passed"
 
 # 4. Run security audit
 echo "🔒 Running security audit..."
-if ! mise run ci-audit; then
+if ! mise run audit; then
     echo "❌ Security audit failed!"
     echo "💡 Fix the security issues above"
     exit 1

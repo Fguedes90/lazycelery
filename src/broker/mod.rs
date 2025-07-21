@@ -1,4 +1,3 @@
-pub mod amqp;
 pub mod redis;
 
 use crate::error::BrokerError;

@@ -530,14 +530,15 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts
           echo "✅ AUR SSH configured"
+          echo "AUR_SSH_CONFIGURED=true" >> $GITHUB_ENV
         else
           echo "⚠️  AUR_SSH_KEY not configured, skipping AUR updates"
-          exit 0
+          echo "AUR_SSH_CONFIGURED=false" >> $GITHUB_ENV
         fi
     
     - name: Update AUR source package
+      if: env.AUR_SSH_CONFIGURED == 'true'
       run: |
-        if [ ! -f ~/.ssh/id_rsa ]; then exit 0; fi
         
         VERSION=${GITHUB_REF#refs/tags/v}
         SOURCE_URL="https://github.com/Fguedes90/lazycelery/archive/v$VERSION.tar.gz"
@@ -569,8 +570,8 @@ jobs:
         echo "✅ AUR source package updated to v$VERSION"
     
     - name: Update AUR binary package
+      if: env.AUR_SSH_CONFIGURED == 'true'
       run: |
-        if [ ! -f ~/.ssh/id_rsa ]; then exit 0; fi
         
         VERSION=${GITHUB_REF#refs/tags/v}
         LINUX_URL="https://github.com/Fguedes90/lazycelery/releases/download/v$VERSION/lazycelery-linux-x86_64.tar.gz"

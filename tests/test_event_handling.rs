@@ -1,111 +1,75 @@
-use async_trait::async_trait;
 use chrono::Utc;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use lazycelery::app::{App, Tab};
-use lazycelery::broker::Broker;
-use lazycelery::error::BrokerError;
-use lazycelery::models::{Queue, Task, TaskStatus, Worker, WorkerStatus};
+use lazycelery::models::{Task, TaskStatus, Worker, WorkerStatus};
 use lazycelery::ui::events::{handle_key_event, AppEvent};
 
-// Mock broker for testing
-struct MockBroker;
-
-#[async_trait]
-impl Broker for MockBroker {
-    async fn connect(_url: &str) -> Result<Self, BrokerError> {
-        Ok(MockBroker)
-    }
-
-    async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError> {
-        Ok(vec![])
-    }
-
-    async fn get_tasks(&self) -> Result<Vec<Task>, BrokerError> {
-        Ok(vec![])
-    }
-
-    async fn get_queues(&self) -> Result<Vec<Queue>, BrokerError> {
-        Ok(vec![])
-    }
-
-    async fn retry_task(&self, _task_id: &str) -> Result<(), BrokerError> {
-        Err(BrokerError::NotImplemented)
-    }
-
-    async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
-        Err(BrokerError::NotImplemented)
-    }
-
-    async fn purge_queue(&self, _queue_name: &str) -> Result<u64, BrokerError> {
-        Err(BrokerError::NotImplemented)
-    }
-}
+mod test_broker_utils;
+use test_broker_utils::MockBrokerBuilder;
 
 fn create_test_app() -> App {
-    let broker = Box::new(MockBroker);
-    let mut app = App::new(broker);
+    // Use consolidated mock broker with custom test data for navigation
+    let broker = MockBrokerBuilder::new()
+        .with_workers(vec![
+            Worker {
+                hostname: "worker-1".to_string(),
+                status: WorkerStatus::Online,
+                concurrency: 4,
+                queues: vec!["default".to_string()],
+                active_tasks: vec![],
+                processed: 100,
+                failed: 5,
+            },
+            Worker {
+                hostname: "worker-2".to_string(),
+                status: WorkerStatus::Offline,
+                concurrency: 8,
+                queues: vec!["celery".to_string()],
+                active_tasks: vec![],
+                processed: 250,
+                failed: 12,
+            },
+        ])
+        .with_tasks(vec![
+            Task {
+                id: "task-1".to_string(),
+                name: "myapp.tasks.process_data".to_string(),
+                args: "[]".to_string(),
+                kwargs: "{}".to_string(),
+                status: TaskStatus::Success,
+                worker: Some("worker-1".to_string()),
+                timestamp: Utc::now(),
+                result: None,
+                traceback: None,
+            },
+            Task {
+                id: "task-2".to_string(),
+                name: "myapp.tasks.another_task".to_string(),
+                args: "[]".to_string(),
+                kwargs: "{}".to_string(),
+                status: TaskStatus::Failure,
+                worker: Some("worker-2".to_string()),
+                timestamp: Utc::now(),
+                result: None,
+                traceback: None,
+            },
+        ])
+        .with_queues(vec![
+            lazycelery::models::Queue {
+                name: "default".to_string(),
+                length: 10,
+                consumers: 2,
+            },
+            lazycelery::models::Queue {
+                name: "priority".to_string(),
+                length: 5,
+                consumers: 1,
+            },
+        ])
+        .with_not_implemented_operations()
+        .build();
 
-    // Add some test data for navigation tests
-    app.workers = vec![
-        Worker {
-            hostname: "worker-1".to_string(),
-            status: WorkerStatus::Online,
-            concurrency: 4,
-            queues: vec!["default".to_string()],
-            active_tasks: vec![],
-            processed: 100,
-            failed: 5,
-        },
-        Worker {
-            hostname: "worker-2".to_string(),
-            status: WorkerStatus::Offline,
-            concurrency: 8,
-            queues: vec!["celery".to_string()],
-            active_tasks: vec![],
-            processed: 250,
-            failed: 12,
-        },
-    ];
-
-    app.tasks = vec![
-        Task {
-            id: "task-1".to_string(),
-            name: "myapp.tasks.process_data".to_string(),
-            args: "[]".to_string(),
-            kwargs: "{}".to_string(),
-            status: TaskStatus::Success,
-            worker: Some("worker-1".to_string()),
-            timestamp: Utc::now(),
-            result: None,
-            traceback: None,
-        },
-        Task {
-            id: "task-2".to_string(),
-            name: "myapp.tasks.another_task".to_string(),
-            args: "[]".to_string(),
-            kwargs: "{}".to_string(),
-            status: TaskStatus::Failure,
-            worker: Some("worker-2".to_string()),
-            timestamp: Utc::now(),
-            result: None,
-            traceback: None,
-        },
-    ];
-
-    app.queues = vec![
-        Queue {
-            name: "default".to_string(),
-            length: 10,
-            consumers: 2,
-        },
-        Queue {
-            name: "priority".to_string(),
-            length: 5,
-            consumers: 1,
-        },
-    ];
-
-    app
+    App::new(broker)
 }
 
 fn create_key_event(code: KeyCode) -> KeyEvent {
@@ -336,7 +300,7 @@ fn test_key_event_precedence() {
 
 #[test]
 fn test_empty_data_navigation() {
-    let broker = Box::new(MockBroker);
+    let broker = MockBrokerBuilder::empty().build();
     let mut app = App::new(broker); // Empty app
 
     // Navigation on empty data should not crash

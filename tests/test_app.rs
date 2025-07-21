@@ -1,59 +1,12 @@
-use async_trait::async_trait;
 use lazycelery::app::{App, Tab};
-use lazycelery::broker::Broker;
-use lazycelery::error::BrokerError;
 use lazycelery::models::{Queue, Task, TaskStatus, Worker, WorkerStatus};
 
-// Mock broker for testing
-struct MockBroker {
-    workers: Vec<Worker>,
-    tasks: Vec<Task>,
-    queues: Vec<Queue>,
-}
-
-#[async_trait]
-impl Broker for MockBroker {
-    async fn connect(_url: &str) -> Result<Self, BrokerError> {
-        Ok(MockBroker {
-            workers: vec![],
-            tasks: vec![],
-            queues: vec![],
-        })
-    }
-
-    async fn get_workers(&self) -> Result<Vec<Worker>, BrokerError> {
-        Ok(self.workers.clone())
-    }
-
-    async fn get_tasks(&self) -> Result<Vec<Task>, BrokerError> {
-        Ok(self.tasks.clone())
-    }
-
-    async fn get_queues(&self) -> Result<Vec<Queue>, BrokerError> {
-        Ok(self.queues.clone())
-    }
-
-    async fn retry_task(&self, _task_id: &str) -> Result<(), BrokerError> {
-        Ok(())
-    }
-
-    async fn revoke_task(&self, _task_id: &str) -> Result<(), BrokerError> {
-        Ok(())
-    }
-
-    async fn purge_queue(&self, _queue_name: &str) -> Result<u64, BrokerError> {
-        Ok(0)
-    }
-}
+mod test_broker_utils;
+use test_broker_utils::MockBrokerBuilder;
 
 #[test]
 fn test_app_creation() {
-    let broker = Box::new(MockBroker {
-        workers: vec![],
-        tasks: vec![],
-        queues: vec![],
-    });
-
+    let broker = MockBrokerBuilder::empty().build();
     let app = App::new(broker);
 
     assert_eq!(app.selected_tab, Tab::Workers);
@@ -68,12 +21,7 @@ fn test_app_creation() {
 
 #[test]
 fn test_tab_navigation() {
-    let broker = Box::new(MockBroker {
-        workers: vec![],
-        tasks: vec![],
-        queues: vec![],
-    });
-
+    let broker = MockBrokerBuilder::empty().build();
     let mut app = App::new(broker);
 
     assert_eq!(app.selected_tab, Tab::Workers);
@@ -127,11 +75,11 @@ async fn test_app_refresh_data() {
         consumers: 2,
     }];
 
-    let broker = Box::new(MockBroker {
-        workers: test_workers.clone(),
-        tasks: test_tasks.clone(),
-        queues: test_queues.clone(),
-    });
+    let broker = MockBrokerBuilder::new()
+        .with_workers(test_workers.clone())
+        .with_tasks(test_tasks.clone())
+        .with_queues(test_queues.clone())
+        .build();
 
     let mut app = App::new(broker);
 
@@ -147,8 +95,8 @@ async fn test_app_refresh_data() {
 
 #[test]
 fn test_item_selection() {
-    let broker = Box::new(MockBroker {
-        workers: vec![
+    let broker = MockBrokerBuilder::new()
+        .with_workers(vec![
             Worker {
                 hostname: "worker-1".to_string(),
                 status: WorkerStatus::Online,
@@ -167,10 +115,8 @@ fn test_item_selection() {
                 processed: 0,
                 failed: 0,
             },
-        ],
-        tasks: vec![],
-        queues: vec![],
-    });
+        ])
+        .build();
 
     let mut app = App::new(broker);
     app.workers = vec![
@@ -211,12 +157,7 @@ fn test_item_selection() {
 
 #[test]
 fn test_help_toggle() {
-    let broker = Box::new(MockBroker {
-        workers: vec![],
-        tasks: vec![],
-        queues: vec![],
-    });
-
+    let broker = MockBrokerBuilder::empty().build();
     let mut app = App::new(broker);
 
     assert!(!app.show_help);
@@ -230,12 +171,7 @@ fn test_help_toggle() {
 
 #[test]
 fn test_search_functionality() {
-    let broker = Box::new(MockBroker {
-        workers: vec![],
-        tasks: vec![],
-        queues: vec![],
-    });
-
+    let broker = MockBrokerBuilder::empty().build();
     let mut app = App::new(broker);
     app.tasks = vec![
         Task {
@@ -287,12 +223,7 @@ fn test_search_functionality() {
 
 #[test]
 fn test_empty_state_selection() {
-    let broker = Box::new(MockBroker {
-        workers: vec![],
-        tasks: vec![],
-        queues: vec![],
-    });
-
+    let broker = MockBrokerBuilder::empty().build();
     let mut app = App::new(broker);
 
     // Should not panic when selecting with empty lists

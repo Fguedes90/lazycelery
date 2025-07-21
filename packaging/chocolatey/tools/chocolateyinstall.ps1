@@ -6,7 +6,7 @@ if ($packageName -notmatch '^[a-zA-Z0-9\-]+$') {
     throw "Invalid package name: $packageName"
 }
 
-$version = '0.2.0'
+$version = '0.4.0'
 if ($version -notmatch '^\d+\.\d+\.\d+(-[a-zA-Z0-9\-\.]+)?$') {
     throw "Invalid version format: $version"
 }

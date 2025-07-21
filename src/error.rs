@@ -15,6 +15,9 @@ pub enum BrokerError {
     #[error("Invalid broker URL: {0}")]
     InvalidUrl(String),
 
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
     #[error("Timeout occurred")]
     Timeout,
 

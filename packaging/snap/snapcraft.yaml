@@ -1,12 +1,10 @@
 name: lazycelery
 base: core22
-version: '0.2.0'
-summary: Terminal UI for monitoring and managing Celery workers and tasks
+version: '0.4.0'
+summary: A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit
 description: |
-  LazyCelery is a terminal UI for monitoring and managing Celery workers and tasks, 
-  inspired by lazydocker/lazygit. It provides real-time monitoring of your Celery 
-  infrastructure with an intuitive terminal interface.
-
+  A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit
+  
   Features:
   - Real-time monitoring of Celery workers and tasks
   - Task management (retry, revoke, purge queues)
@@ -33,7 +31,7 @@ parts:
   lazycelery:
     plugin: rust
     source: https://github.com/Fguedes90/lazycelery.git
-    source-tag: v0.2.0
+    source-tag: v0.4.0
     rust-features: []
     build-packages:
       - build-essential

@@ -2,23 +2,23 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>lazycelery</id>
-    <version>0.2.0</version>
+    <version>0.4.0</version>
     <packageSourceUrl>https://github.com/Fguedes90/lazycelery/tree/main/packaging/chocolatey</packageSourceUrl>
     <owners>Francisco Guedes</owners>
-    <title>LazyCelery</title>
+    <title>Lazycelery</title>
     <authors>Francisco Guedes</authors>
     <projectUrl>https://github.com/Fguedes90/lazycelery</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/Fguedes90/lazycelery/main/screenshots/workers-view.png</iconUrl>
+    <iconUrl>https://github.com/Fguedes90/lazycelery/raw/main/screenshots/workers-view.png</iconUrl>
     <copyright>2024 Francisco Guedes</copyright>
     <licenseUrl>https://github.com/Fguedes90/lazycelery/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/Fguedes90/lazycelery</projectSourceUrl>
     <docsUrl>https://github.com/Fguedes90/lazycelery/blob/main/README.md</docsUrl>
     <bugTrackerUrl>https://github.com/Fguedes90/lazycelery/issues</bugTrackerUrl>
-    <tags>celery terminal-ui monitoring rust cli tui redis</tags>
-    <summary>Terminal UI for monitoring and managing Celery workers and tasks</summary>
+    <tags>celery tui terminal monitoring redis</tags>
+    <summary>A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit</summary>
     <description>
-LazyCelery is a terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit.
+A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit
 
 ## Features
 - Real-time monitoring of Celery workers and tasks

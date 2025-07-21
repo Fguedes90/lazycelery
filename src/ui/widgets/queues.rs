@@ -1,30 +1,31 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph},
+    widgets::{Gauge, List, ListItem, Paragraph},
     Frame,
 };
 
+use super::base::{helpers, Widget};
 use crate::app::App;
 
 pub struct QueueWidget;
 
-impl QueueWidget {
-    pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+impl Widget for QueueWidget {
+    fn draw(f: &mut Frame, app: &App, area: Rect) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
             .split(area);
 
         // Draw queue list on the left
-        Self::draw_queue_list(f, app, chunks[0]);
+        Self::draw_list(f, app, chunks[0]);
 
         // Draw queue details on the right
-        Self::draw_queue_details(f, app, chunks[1]);
+        Self::draw_details(f, app, chunks[1]);
     }
 
-    fn draw_queue_list(f: &mut Frame, app: &App, area: Rect) {
+    fn draw_list(f: &mut Frame, app: &App, area: Rect) {
         let queues: Vec<ListItem> = app
             .queues
             .iter()
@@ -45,40 +46,24 @@ impl QueueWidget {
                 ]);
 
                 if idx == app.selected_queue {
-                    ListItem::new(content).style(
-                        Style::default()
-                            .bg(Color::DarkGray)
-                            .add_modifier(Modifier::BOLD),
-                    )
+                    ListItem::new(content).style(helpers::selection_style())
                 } else {
                     ListItem::new(content)
                 }
             })
             .collect();
 
+        let title = format!("Queues ({})", app.queues.len());
         let queues_list = List::new(queues)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(format!(" Queues ({}) ", app.queues.len())),
-            )
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .block(helpers::titled_block(&title))
+            .highlight_style(helpers::selection_style());
 
         f.render_widget(queues_list, area);
     }
 
-    fn draw_queue_details(f: &mut Frame, app: &App, area: Rect) {
+    fn draw_details(f: &mut Frame, app: &App, area: Rect) {
         if app.queues.is_empty() {
-            let no_queues = Paragraph::new("No queues found").block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Queue Details "),
-            );
-            f.render_widget(no_queues, area);
+            f.render_widget(helpers::no_data_message("queues"), area);
             return;
         }
 
@@ -94,46 +79,36 @@ impl QueueWidget {
 
             // Queue info
             let info_lines = vec![
-                Line::from(vec![
-                    Span::raw("Queue Name: "),
-                    Span::styled(&queue.name, Style::default().fg(Color::Cyan)),
-                ]),
-                Line::from(vec![
-                    Span::raw("Messages: "),
-                    Span::styled(
-                        queue.length.to_string(),
-                        Style::default().fg(if queue.length > 100 {
-                            Color::Red
-                        } else if queue.length > 50 {
-                            Color::Yellow
-                        } else {
-                            Color::Green
-                        }),
-                    ),
-                ]),
-                Line::from(vec![
-                    Span::raw("Consumers: "),
-                    Span::raw(queue.consumers.to_string()),
-                ]),
-                Line::from(vec![
-                    Span::raw("Status: "),
-                    Span::styled(
-                        if queue.has_consumers() {
-                            "Active"
-                        } else if queue.is_empty() {
-                            "Empty"
-                        } else {
-                            "No consumers"
-                        },
-                        Style::default().fg(if queue.has_consumers() {
-                            Color::Green
-                        } else if queue.is_empty() {
-                            Color::Gray
-                        } else {
-                            Color::Yellow
-                        }),
-                    ),
-                ]),
+                helpers::highlighted_field_line("Queue Name", &queue.name, Color::Cyan),
+                helpers::status_line(
+                    "Messages",
+                    &queue.length.to_string(),
+                    if queue.length > 100 {
+                        Color::Red
+                    } else if queue.length > 50 {
+                        Color::Yellow
+                    } else {
+                        Color::Green
+                    },
+                ),
+                helpers::field_line("Consumers", &queue.consumers.to_string()),
+                helpers::status_line(
+                    "Status",
+                    if queue.has_consumers() {
+                        "Active"
+                    } else if queue.is_empty() {
+                        "Empty"
+                    } else {
+                        "No consumers"
+                    },
+                    if queue.has_consumers() {
+                        Color::Green
+                    } else if queue.is_empty() {
+                        Color::Gray
+                    } else {
+                        Color::Yellow
+                    },
+                ),
                 Line::from(""),
                 Line::from(vec![Span::styled(
                     "[p] Purge queue (requires confirmation)",
@@ -141,18 +116,14 @@ impl QueueWidget {
                 )]),
             ];
 
-            let info = Paragraph::new(info_lines).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Queue Details "),
-            );
+            let info = Paragraph::new(info_lines).block(helpers::titled_block("Queue Details"));
             f.render_widget(info, chunks[0]);
 
             // Queue fill gauge
             let max_queue_size = 1000; // Configurable max for visualization
             let ratio = (queue.length as f64 / max_queue_size as f64).min(1.0);
             let gauge = Gauge::default()
-                .block(Block::default().borders(Borders::ALL).title(" Queue Fill "))
+                .block(helpers::titled_block("Queue Fill"))
                 .gauge_style(Style::default().fg(if queue.length > 100 {
                     Color::Red
                 } else if queue.length > 50 {
@@ -172,7 +143,7 @@ impl QueueWidget {
                 Line::from("- Purge queue (coming soon)"),
                 Line::from("- Export messages (coming soon)"),
             ])
-            .block(Block::default().borders(Borders::ALL).title(" Actions "));
+            .block(helpers::titled_block("Actions"));
             f.render_widget(actions, chunks[2]);
         }
     }

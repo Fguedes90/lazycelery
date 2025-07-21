@@ -1,5 +1,4 @@
 use crate::broker::Broker;
-use crate::error::AppError;
 use crate::models::{Queue, Task, Worker};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -11,27 +10,6 @@ pub enum Tab {
     Tasks,
 }
 
-pub struct App {
-    pub workers: Vec<Worker>,
-    pub tasks: Vec<Task>,
-    pub queues: Vec<Queue>,
-    pub selected_tab: Tab,
-    pub should_quit: bool,
-    pub selected_worker: usize,
-    pub selected_task: usize,
-    pub selected_queue: usize,
-    pub show_help: bool,
-    pub search_query: String,
-    pub is_searching: bool,
-    pub show_confirmation: bool,
-    pub confirmation_message: String,
-    pub pending_action: Option<PendingAction>,
-    pub status_message: String,
-    pub show_task_details: bool,
-    pub selected_task_details: Option<Task>,
-    broker: Arc<Mutex<Box<dyn Broker>>>,
-}
-
 #[derive(Debug, Clone)]
 pub enum PendingAction {
     PurgeQueue(String),
@@ -39,7 +17,39 @@ pub enum PendingAction {
     RevokeTask(String),
 }
 
-impl App {
+pub struct AppState {
+    // Data state
+    pub workers: Vec<Worker>,
+    pub tasks: Vec<Task>,
+    pub queues: Vec<Queue>,
+
+    // Navigation state
+    pub selected_tab: Tab,
+    pub selected_worker: usize,
+    pub selected_task: usize,
+    pub selected_queue: usize,
+
+    // UI state
+    pub should_quit: bool,
+    pub show_help: bool,
+    pub search_query: String,
+    pub is_searching: bool,
+
+    // Dialog state
+    pub show_confirmation: bool,
+    pub confirmation_message: String,
+    pub pending_action: Option<PendingAction>,
+    pub status_message: String,
+
+    // Task details state
+    pub show_task_details: bool,
+    pub selected_task_details: Option<Task>,
+
+    // Broker
+    pub(crate) broker: Arc<Mutex<Box<dyn Broker>>>,
+}
+
+impl AppState {
     pub fn new(broker: Box<dyn Broker>) -> Self {
         Self {
             workers: Vec::new(),
@@ -63,34 +73,7 @@ impl App {
         }
     }
 
-    pub async fn refresh_data(&mut self) -> Result<(), AppError> {
-        let broker = self.broker.lock().await;
-
-        // Fetch all data in parallel
-        let (workers_result, tasks_result, queues_result) = tokio::join!(
-            broker.get_workers(),
-            broker.get_tasks(),
-            broker.get_queues()
-        );
-
-        self.workers = workers_result?;
-        self.tasks = tasks_result?;
-        self.queues = queues_result?;
-
-        // Ensure selection indices are valid
-        if self.selected_worker >= self.workers.len() && !self.workers.is_empty() {
-            self.selected_worker = self.workers.len() - 1;
-        }
-        if self.selected_task >= self.tasks.len() && !self.tasks.is_empty() {
-            self.selected_task = self.tasks.len() - 1;
-        }
-        if self.selected_queue >= self.queues.len() && !self.queues.is_empty() {
-            self.selected_queue = self.queues.len() - 1;
-        }
-
-        Ok(())
-    }
-
+    // Tab navigation
     pub fn next_tab(&mut self) {
         self.selected_tab = match self.selected_tab {
             Tab::Workers => Tab::Queues,
@@ -107,6 +90,7 @@ impl App {
         };
     }
 
+    // Item selection
     pub fn select_next(&mut self) {
         match self.selected_tab {
             Tab::Workers => {
@@ -161,6 +145,7 @@ impl App {
         }
     }
 
+    // UI state management
     pub fn toggle_help(&mut self) {
         self.show_help = !self.show_help;
     }
@@ -179,6 +164,7 @@ impl App {
         }
     }
 
+    // Task filtering
     pub fn get_filtered_tasks(&self) -> Vec<&Task> {
         if self.search_query.is_empty() {
             self.tasks.iter().collect()
@@ -198,6 +184,7 @@ impl App {
         }
     }
 
+    // Dialog management
     pub fn show_confirmation_dialog(&mut self, message: String, action: PendingAction) {
         self.confirmation_message = message;
         self.pending_action = Some(action);
@@ -210,6 +197,7 @@ impl App {
         self.pending_action = None;
     }
 
+    // Status message management
     pub fn set_status_message(&mut self, message: String) {
         self.status_message = message;
     }
@@ -218,71 +206,7 @@ impl App {
         self.status_message.clear();
     }
 
-    pub async fn execute_pending_action(&mut self) -> Result<(), AppError> {
-        if let Some(action) = self.pending_action.take() {
-            let message = {
-                let broker = self.broker.lock().await;
-
-                match &action {
-                    PendingAction::PurgeQueue(queue_name) => {
-                        match broker.purge_queue(queue_name).await {
-                            Ok(count) => {
-                                format!("Purged {count} messages from queue '{queue_name}'")
-                            }
-                            Err(e) => format!("Failed to purge queue '{queue_name}': {e}"),
-                        }
-                    }
-                    PendingAction::RetryTask(task_id) => match broker.retry_task(task_id).await {
-                        Ok(_) => format!("Task '{task_id}' marked for retry"),
-                        Err(e) => format!("Failed to retry task '{task_id}': {e}"),
-                    },
-                    PendingAction::RevokeTask(task_id) => match broker.revoke_task(task_id).await {
-                        Ok(_) => format!("Task '{task_id}' revoked"),
-                        Err(e) => format!("Failed to revoke task '{task_id}': {e}"),
-                    },
-                }
-            };
-
-            self.set_status_message(message);
-        }
-
-        self.hide_confirmation_dialog();
-        Ok(())
-    }
-
-    pub fn initiate_purge_queue(&mut self) {
-        if !self.queues.is_empty() && self.selected_tab == Tab::Queues {
-            let queue = &self.queues[self.selected_queue];
-            let message = format!(
-                "Are you sure you want to purge all {} messages from queue '{}'?",
-                queue.length, queue.name
-            );
-            self.show_confirmation_dialog(message, PendingAction::PurgeQueue(queue.name.clone()));
-        }
-    }
-
-    pub fn initiate_retry_task(&mut self) {
-        if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
-            let filtered_tasks = self.get_filtered_tasks();
-            if self.selected_task < filtered_tasks.len() {
-                let task = filtered_tasks[self.selected_task];
-                let message = format!("Are you sure you want to retry task '{}'?", task.id);
-                self.show_confirmation_dialog(message, PendingAction::RetryTask(task.id.clone()));
-            }
-        }
-    }
-
-    pub fn initiate_revoke_task(&mut self) {
-        if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
-            let filtered_tasks = self.get_filtered_tasks();
-            if self.selected_task < filtered_tasks.len() {
-                let task = filtered_tasks[self.selected_task];
-                let message = format!("Are you sure you want to revoke task '{}'?", task.id);
-                self.show_confirmation_dialog(message, PendingAction::RevokeTask(task.id.clone()));
-            }
-        }
-    }
-
+    // Task details management
     pub fn show_task_details(&mut self) {
         if !self.tasks.is_empty() && self.selected_tab == Tab::Tasks {
             let filtered_tasks = self.get_filtered_tasks();
@@ -297,5 +221,19 @@ impl App {
     pub fn hide_task_details(&mut self) {
         self.show_task_details = false;
         self.selected_task_details = None;
+    }
+
+    // Data validation after refresh
+    pub fn validate_selections(&mut self) {
+        // Ensure selection indices are valid
+        if self.selected_worker >= self.workers.len() && !self.workers.is_empty() {
+            self.selected_worker = self.workers.len() - 1;
+        }
+        if self.selected_task >= self.tasks.len() && !self.tasks.is_empty() {
+            self.selected_task = self.tasks.len() - 1;
+        }
+        if self.selected_queue >= self.queues.len() && !self.queues.is_empty() {
+            self.selected_queue = self.queues.len() - 1;
+        }
     }
 }

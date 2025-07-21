@@ -1,31 +1,32 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Row, Table},
+    widgets::{List, ListItem, Paragraph, Row, Table},
     Frame,
 };
 
+use super::base::{helpers, Widget};
 use crate::app::App;
 use crate::models::WorkerStatus;
 
 pub struct WorkerWidget;
 
-impl WorkerWidget {
-    pub fn draw(f: &mut Frame, app: &App, area: Rect) {
+impl Widget for WorkerWidget {
+    fn draw(f: &mut Frame, app: &App, area: Rect) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
             .split(area);
 
         // Draw worker list on the left
-        Self::draw_worker_list(f, app, chunks[0]);
+        Self::draw_list(f, app, chunks[0]);
 
         // Draw worker details on the right
-        Self::draw_worker_details(f, app, chunks[1]);
+        Self::draw_details(f, app, chunks[1]);
     }
 
-    fn draw_worker_list(f: &mut Frame, app: &App, area: Rect) {
+    fn draw_list(f: &mut Frame, app: &App, area: Rect) {
         let workers: Vec<ListItem> = app
             .workers
             .iter()
@@ -47,40 +48,24 @@ impl WorkerWidget {
                 ]);
 
                 if idx == app.selected_worker {
-                    ListItem::new(content).style(
-                        Style::default()
-                            .bg(Color::DarkGray)
-                            .add_modifier(Modifier::BOLD),
-                    )
+                    ListItem::new(content).style(helpers::selection_style())
                 } else {
                     ListItem::new(content)
                 }
             })
             .collect();
 
+        let title = format!("Workers ({})", app.workers.len());
         let workers_list = List::new(workers)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(format!(" Workers ({}) ", app.workers.len())),
-            )
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .block(helpers::titled_block(&title))
+            .highlight_style(helpers::selection_style());
 
         f.render_widget(workers_list, area);
     }
 
-    fn draw_worker_details(f: &mut Frame, app: &App, area: Rect) {
+    fn draw_details(f: &mut Frame, app: &App, area: Rect) {
         if app.workers.is_empty() {
-            let no_workers = Paragraph::new("No workers found").block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Worker Details "),
-            );
-            f.render_widget(no_workers, area);
+            f.render_widget(helpers::no_data_message("workers"), area);
             return;
         }
 
@@ -92,61 +77,34 @@ impl WorkerWidget {
 
             // Worker info section
             let info_lines = vec![
-                Line::from(vec![
-                    Span::raw("Hostname: "),
-                    Span::styled(&worker.hostname, Style::default().fg(Color::Cyan)),
-                ]),
-                Line::from(vec![
-                    Span::raw("Status: "),
-                    Span::styled(
-                        match worker.status {
-                            WorkerStatus::Online => "Online",
-                            WorkerStatus::Offline => "Offline",
-                        },
-                        Style::default().fg(match worker.status {
-                            WorkerStatus::Online => Color::Green,
-                            WorkerStatus::Offline => Color::Red,
-                        }),
-                    ),
-                ]),
-                Line::from(vec![
-                    Span::raw("Concurrency: "),
-                    Span::raw(worker.concurrency.to_string()),
-                ]),
-                Line::from(vec![
-                    Span::raw("Active Tasks: "),
-                    Span::raw(format!(
-                        "{}/{}",
-                        worker.active_tasks.len(),
-                        worker.concurrency
-                    )),
-                ]),
-                Line::from(vec![
-                    Span::raw("Utilization: "),
-                    Span::raw(format!("{:.1}%", worker.utilization())),
-                ]),
-                Line::from(vec![
-                    Span::raw("Processed: "),
-                    Span::styled(
-                        worker.processed.to_string(),
-                        Style::default().fg(Color::Green),
-                    ),
-                ]),
-                Line::from(vec![
-                    Span::raw("Failed: "),
-                    Span::styled(worker.failed.to_string(), Style::default().fg(Color::Red)),
-                ]),
-                Line::from(vec![
-                    Span::raw("Queues: "),
-                    Span::raw(worker.queues.join(", ")),
-                ]),
+                helpers::highlighted_field_line("Hostname", &worker.hostname, Color::Cyan),
+                helpers::status_line(
+                    "Status",
+                    match worker.status {
+                        WorkerStatus::Online => "Online",
+                        WorkerStatus::Offline => "Offline",
+                    },
+                    match worker.status {
+                        WorkerStatus::Online => Color::Green,
+                        WorkerStatus::Offline => Color::Red,
+                    },
+                ),
+                helpers::field_line("Concurrency", &worker.concurrency.to_string()),
+                helpers::field_line(
+                    "Active Tasks",
+                    &format!("{}/{}", worker.active_tasks.len(), worker.concurrency),
+                ),
+                helpers::field_line("Utilization", &format!("{:.1}%", worker.utilization())),
+                helpers::highlighted_field_line(
+                    "Processed",
+                    &worker.processed.to_string(),
+                    Color::Green,
+                ),
+                helpers::highlighted_field_line("Failed", &worker.failed.to_string(), Color::Red),
+                helpers::field_line("Queues", &worker.queues.join(", ")),
             ];
 
-            let info = Paragraph::new(info_lines).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Worker Details "),
-            );
+            let info = Paragraph::new(info_lines).block(helpers::titled_block("Worker Details"));
             f.render_widget(info, chunks[0]);
 
             // Active tasks section
@@ -158,11 +116,7 @@ impl WorkerWidget {
                     .collect();
 
                 let tasks_table = Table::new(task_rows, [Constraint::Percentage(100)])
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title(" Active Tasks "),
-                    )
+                    .block(helpers::titled_block("Active Tasks"))
                     .header(
                         Row::new(vec!["Task ID"])
                             .style(Style::default().fg(Color::Yellow))
@@ -171,11 +125,8 @@ impl WorkerWidget {
 
                 f.render_widget(tasks_table, chunks[1]);
             } else {
-                let no_tasks = Paragraph::new("No active tasks").block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title(" Active Tasks "),
-                );
+                let no_tasks =
+                    Paragraph::new("No active tasks").block(helpers::titled_block("Active Tasks"));
                 f.render_widget(no_tasks, chunks[1]);
             }
         }

@@ -4,6 +4,8 @@ on:
   # Automatic release on push to main branch
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   # Manual release with version selection
   workflow_dispatch:
     inputs:
@@ -16,10 +18,6 @@ on:
         - patch
         - minor
         - major
-  # Tag-based release (for manual tags)
-  push:
-    tags:
-      - 'v*'
 
 env:
   CARGO_TERM_COLOR: always

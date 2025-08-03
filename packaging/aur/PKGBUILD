@@ -1,6 +1,6 @@
 # Maintainer: Francisco Guedes <francis@example.com>
 pkgname=lazycelery
-pkgver=0.4.0
+pkgver=0.4.1
 pkgrel=1
 pkgdesc="A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit"
 arch=('x86_64')
@@ -9,7 +9,7 @@ license=('MIT')
 depends=('gcc-libs')
 makedepends=('rust' 'cargo')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/Fguedes90/lazycelery/archive/v$pkgver.tar.gz")
-sha256sums=('efc5564f7c80ce96c716867a9689f6fb96f6f5c36aae8d9743fc0b7b387f82ae')
+sha256sums=('PLACEHOLDER_SHA256')
 
 build() {
     cd "$pkgname-$pkgver"

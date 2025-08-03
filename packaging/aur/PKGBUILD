@@ -1,6 +1,6 @@
 # Maintainer: Francisco Guedes <francis@example.com>
 pkgname=lazycelery
-pkgver=0.4.1
+pkgver=0.4.5
 pkgrel=1
 pkgdesc="A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit"
 arch=('x86_64')

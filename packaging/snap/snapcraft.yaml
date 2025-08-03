@@ -1,6 +1,6 @@
 name: lazycelery
 base: core22
-version: '0.4.1'
+version: '0.4.5'
 summary: A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit
 description: |
   A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit
@@ -31,7 +31,7 @@ parts:
   lazycelery:
     plugin: rust
     source: https://github.com/Fguedes90/lazycelery.git
-    source-tag: v0.4.1
+    source-tag: v0.4.5
     rust-features: []
     build-packages:
       - build-essential

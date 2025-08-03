@@ -1,11 +1,11 @@
 {
-    "version": "0.4.1",
+    "version": "0.4.5",
     "description": "A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit",
     "homepage": "https://github.com/Fguedes90/lazycelery",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/Fguedes90/lazycelery/releases/download/v0.4.1/lazycelery-windows-x86_64.zip",
+            "url": "https://github.com/Fguedes90/lazycelery/releases/download/v0.4.5/lazycelery-windows-x86_64.zip",
             "hash": "PLACEHOLDER_SHA256",
             "extract_dir": ""
         }

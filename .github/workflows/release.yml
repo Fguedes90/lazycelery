@@ -181,7 +181,7 @@ jobs:
   prepare-release:
     name: Prepare Release
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
     outputs:
       new_version: ${{ steps.version.outputs.version }}
     steps:

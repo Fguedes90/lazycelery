@@ -43,4 +43,33 @@ impl Config {
         let config: Config = toml::from_str(&contents)?;
         Ok(config)
     }
+
+    pub fn load_or_create_default() -> Result<Self> {
+        let config_dir = dirs::config_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
+            .join("lazycelery");
+        
+        let config_path = config_dir.join("config.toml");
+        
+        if config_path.exists() {
+            Self::from_file(config_path)
+        } else {
+            // Create default config
+            let default_config = Self::default();
+            
+            // Try to create config directory and file
+            if let Err(e) = std::fs::create_dir_all(&config_dir) {
+                eprintln!("⚠️  Could not create config directory: {}", e);
+            } else {
+                let toml_string = toml::to_string_pretty(&default_config)?;
+                if let Err(e) = std::fs::write(&config_path, toml_string) {
+                    eprintln!("⚠️  Could not create config file: {}", e);
+                } else {
+                    eprintln!("✅ Created default config at: {}", config_path.display());
+                }
+            }
+            
+            Ok(default_config)
+        }
+    }
 }

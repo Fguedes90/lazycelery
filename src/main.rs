@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
     let config = if let Some(config_path) = args.config {
         Config::from_file(config_path)?
     } else {
-        Config::default()
+        Config::load_or_create_default()?
     };
 
     // Determine broker URL
@@ -50,11 +50,40 @@ async fn main() -> Result<()> {
 
     // Connect to broker
     let broker: Box<dyn Broker> = if broker_url.starts_with("redis://") {
-        Box::new(RedisBroker::connect(&broker_url).await?)
+        match RedisBroker::connect(&broker_url).await {
+            Ok(broker) => Box::new(broker),
+            Err(e) => {
+                eprintln!("\n❌ Failed to connect to Celery broker at {}", broker_url);
+                eprintln!("\n{}", e);
+                eprintln!("\n📋 Quick Setup Guide:");
+                eprintln!("1. Make sure Redis is running:");
+                eprintln!("   - Docker: docker run -d -p 6379:6379 redis");
+                eprintln!("   - macOS: brew services start redis");
+                eprintln!("   - Linux: sudo systemctl start redis");
+                eprintln!("\n2. Verify Redis is accessible:");
+                eprintln!("   redis-cli ping");
+                eprintln!("\n3. Run lazycelery with your broker URL:");
+                eprintln!("   lazycelery --broker redis://localhost:6379/0");
+                eprintln!("\n4. Or create a config file at ~/.config/lazycelery/config.toml:");
+                eprintln!("   [broker]");
+                eprintln!("   url = \"redis://localhost:6379/0\"");
+                eprintln!("\n💡 For more help, visit: https://github.com/Fguedes90/lazycelery");
+                std::process::exit(1);
+            }
+        }
     } else if broker_url.starts_with("amqp://") {
-        return Err(anyhow::anyhow!("AMQP broker not yet implemented"));
+        eprintln!("\n⚠️  AMQP/RabbitMQ support is coming soon!");
+        eprintln!("\n📋 Currently supported brokers:");
+        eprintln!("   - Redis (redis://localhost:6379/0)");
+        eprintln!("\nFor updates, visit: https://github.com/Fguedes90/lazycelery");
+        std::process::exit(1);
     } else {
-        return Err(anyhow::anyhow!("Unknown broker type: {}", broker_url));
+        eprintln!("\n❌ Unknown broker type: {}", broker_url);
+        eprintln!("\n📋 Supported broker URLs:");
+        eprintln!("   - Redis: redis://localhost:6379/0");
+        eprintln!("   - RabbitMQ: amqp://guest:guest@localhost:5672// (coming soon)");
+        eprintln!("\nExample: lazycelery --broker redis://localhost:6379/0");
+        std::process::exit(1);
     };
 
     // Create app state

@@ -19,6 +19,10 @@ on:
         - minor
         - major
 
+permissions:
+  contents: write
+  pull-requests: write
+
 env:
   CARGO_TERM_COLOR: always
 

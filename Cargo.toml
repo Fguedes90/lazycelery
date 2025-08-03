@@ -10,7 +10,7 @@ homepage = "https://github.com/Fguedes90/lazycelery"
 documentation = "https://docs.rs/lazycelery"
 readme = "README.md"
 keywords = ["celery", "tui", "terminal", "monitoring", "redis"]
-categories = ["command-line-utilities", "development-tools"]
+categories = ["command-line-utilities", "development-tools", "debugging"]
 rust-version = "1.88.0"
 exclude = [
     ".github/",

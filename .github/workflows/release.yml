@@ -328,14 +328,16 @@ jobs:
       run: rustup target add ${{ matrix.target }}
     
     - name: Build binary
-      run: |
-        cargo build --release --target ${{ matrix.target }} --locked
-        
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp target/${{ matrix.target }}/release/lazycelery.exe ${{ matrix.name }}
-        else
-          cp target/${{ matrix.target }}/release/lazycelery ${{ matrix.name }}
-        fi
+      run: cargo build --release --target ${{ matrix.target }} --locked
+    
+    - name: Copy binary (Unix)
+      if: matrix.os != 'windows-latest'
+      run: cp target/${{ matrix.target }}/release/lazycelery ${{ matrix.name }}
+    
+    - name: Copy binary (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: Copy-Item target/${{ matrix.target }}/release/lazycelery.exe ${{ matrix.name }}
     
     - name: Create archive (Unix)
       if: matrix.archive == 'tar.gz'

@@ -14,6 +14,9 @@ A terminal UI for monitoring and managing Celery workers and tasks, inspired by 
 - Task listing with status tracking
 - Search and filter capabilities
 - Keyboard-driven interface
+- Interactive CLI configuration with subcommands
+- Automatic configuration file management
+- Helpful error messages and setup guidance
 
 ## Screenshots
 
@@ -104,15 +107,74 @@ mise run setup
 mise run release
 ```
 
-## Usage
+## Quick Start
+
+### First Time Setup
 
 ```bash
-# Connect to Redis broker
+# Run interactive setup
+lazycelery init
+
+# Or start with default Redis configuration
+lazycelery --broker redis://localhost:6379/0
+```
+
+### Configuration Management
+
+LazyCelery provides several subcommands to manage your configuration without editing files:
+
+```bash
+# Initialize configuration with interactive setup
+lazycelery init
+
+# Show current configuration
+lazycelery config
+
+# Update broker URL
+lazycelery set-broker redis://localhost:6379/0
+
+# Update refresh interval (milliseconds)
+lazycelery set-refresh 2000
+```
+
+### Running LazyCelery
+
+```bash
+# Use configured settings
+lazycelery
+
+# Override broker URL
 lazycelery --broker redis://localhost:6379/0
 
-# Use configuration file
+# Use custom config file
 lazycelery --config ~/.config/lazycelery/config.toml
 ```
+
+### Troubleshooting Connection Issues
+
+If you encounter connection errors, LazyCelery provides helpful setup instructions:
+
+1. **Start Redis** (choose one):
+   ```bash
+   # Docker
+   docker run -d -p 6379:6379 redis
+   
+   # macOS
+   brew services start redis
+   
+   # Linux
+   sudo systemctl start redis
+   ```
+
+2. **Verify Redis is running**:
+   ```bash
+   redis-cli ping
+   ```
+
+3. **Run LazyCelery**:
+   ```bash
+   lazycelery --broker redis://localhost:6379/0
+   ```
 
 ## Keyboard Shortcuts
 

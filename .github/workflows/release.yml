@@ -384,6 +384,10 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Install Rust components
+      run: |
+        rustup component add rustfmt clippy
+    
     - name: Get version from tag
       id: version
       run: |

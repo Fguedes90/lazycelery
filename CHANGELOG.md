@@ -1,3 +1,13 @@
+## [0.7.2] - 2025-08-04
+
+### 🐛 Bug Fixes
+
+- Add rustfmt and clippy components to crates.io publish workflow
+- Clarify Cargo installation method in README
+
+### ⚙️ Miscellaneous Tasks
+
+- Add success message to rust components installation
 ## [0.6.0] - 2025-08-04
 
 ### 🚀 Features

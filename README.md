@@ -39,7 +39,7 @@ A terminal UI for monitoring and managing Celery workers and tasks, inspired by 
 
 Choose your preferred installation method:
 
-### 🦀 Cargo (Rust)
+### 🦀 Cargo (Rust package manager)
 
 ```bash
 cargo install lazycelery

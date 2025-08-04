@@ -387,6 +387,7 @@ jobs:
     - name: Install Rust components
       run: |
         rustup component add rustfmt clippy
+        echo "Components installed successfully"
     
     - name: Get version from tag
       id: version

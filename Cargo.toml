@@ -1,6 +1,6 @@
 [package]
 name = "lazycelery"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 authors = ["Francisco Guedes <francis@example.com>"]
 description = "A terminal UI for monitoring and managing Celery workers and tasks, inspired by lazydocker/lazygit"

@@ -52,33 +52,11 @@ brew tap Fguedes90/tap
 brew install lazycelery
 ```
 
-### 📦 Arch Linux (AUR)
-
-```bash
-# Source package (builds from source)
-yay -S lazycelery
-
-# Binary package (faster install)
-yay -S lazycelery-bin
-```
-
 ### 🪣 Scoop (Windows)
 
 ```bash
 scoop bucket add lazycelery https://github.com/Fguedes90/scoop-bucket.git
 scoop install lazycelery
-```
-
-### 🍫 Chocolatey (Windows)
-
-```bash
-choco install lazycelery
-```
-
-### 📱 Snap (Linux)
-
-```bash
-snap install lazycelery
 ```
 
 ### 📥 Binary Download

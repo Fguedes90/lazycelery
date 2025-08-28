@@ -46,7 +46,7 @@ toml = "0.9"
 base64 = "0.22"
 
 # System directories
-dirs = "5.0"
+dirs = "6.0"
 
 # Time handling
 chrono = { version = "0.4", features = ["serde"] }

@@ -11,7 +11,7 @@ use crate::ui::modals::{draw_confirmation_dialog, draw_help, draw_task_details_m
 use crate::ui::widgets::{QueueWidget, TaskWidget, Widget, WorkerWidget};
 
 pub fn draw(f: &mut Frame, app: &mut App) {
-    let chunks = create_main_layout(f.size());
+    let chunks = create_main_layout(f.area());
 
     // Draw header with tabs
     draw_header(f, app, chunks[0]);

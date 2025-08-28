@@ -1,0 +1,7 @@
+# Audit configuration for cargo-audit
+[advisories]
+# Ignore the paste crate unmaintained warning as it's a transitive dependency
+# from ratatui and not a security vulnerability
+ignore = [
+    "RUSTSEC-2024-0436"  # paste - no longer maintained
+]

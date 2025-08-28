@@ -147,7 +147,7 @@ impl Widget for TaskWidget {
         )
         .header(header)
         .block(Block::default().borders(Borders::ALL).title(title))
-        .highlight_style(helpers::selection_style());
+        .row_highlight_style(helpers::selection_style());
 
         f.render_widget(table, area);
     }

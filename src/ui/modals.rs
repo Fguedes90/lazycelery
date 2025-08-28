@@ -11,7 +11,7 @@ use crate::app::App;
 
 /// Draw the help modal overlay
 pub fn draw_help(f: &mut Frame) {
-    let area = centered_rect(60, 60, f.size());
+    let area = centered_rect(60, 60, f.area());
     f.render_widget(Clear, area);
 
     let help_text = vec![
@@ -51,7 +51,7 @@ pub fn draw_help(f: &mut Frame) {
 
 /// Draw the confirmation dialog modal
 pub fn draw_confirmation_dialog(f: &mut Frame, app: &App) {
-    let area = centered_rect(50, 30, f.size());
+    let area = centered_rect(50, 30, f.area());
     f.render_widget(Clear, area);
 
     let confirmation_text = vec![
@@ -76,7 +76,7 @@ pub fn draw_confirmation_dialog(f: &mut Frame, app: &App) {
 /// Draw the detailed task information modal
 pub fn draw_task_details_modal(f: &mut Frame, app: &App) {
     if let Some(task) = &app.selected_task_details {
-        let popup_area = centered_rect(80, 70, f.size());
+        let popup_area = centered_rect(80, 70, f.area());
 
         // Clear background
         f.render_widget(Clear, popup_area);

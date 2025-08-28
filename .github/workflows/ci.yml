@@ -37,7 +37,7 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     
     - name: Install mise (cached)
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -107,7 +107,7 @@ jobs:
         cache-all-crates: "true"
     
     - name: Install mise (cached)
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -146,7 +146,7 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     
     - name: Install mise (cached)
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -190,7 +190,7 @@ jobs:
         cache-all-crates: "true"
     
     - name: Install mise (cached)
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true

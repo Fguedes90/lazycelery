@@ -37,7 +37,7 @@ jobs:
       version_type: ${{ steps.check.outputs.version_type }}
       skip_ci: ${{ steps.check.outputs.skip_ci }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -86,7 +86,7 @@ jobs:
     outputs:
       new_version: ${{ steps.version.outputs.version }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
@@ -185,7 +185,7 @@ jobs:
     outputs:
       new_version: ${{ steps.version.outputs.version }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
@@ -246,7 +246,7 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
     
@@ -315,7 +315,7 @@ jobs:
           archive: tar.gz
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Install mise
       uses: jdx/mise-action@v2
@@ -365,7 +365,7 @@ jobs:
     needs: create-release
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup Rust cache
       uses: Swatinem/rust-cache@v2
@@ -450,7 +450,7 @@ jobs:
     needs: [create-release, publish-crate]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -506,13 +506,13 @@ jobs:
     needs: update-package-managers
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
         repository: Fguedes90/homebrew-tap
         path: homebrew-tap
     
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         path: main-repo
     
@@ -550,7 +550,7 @@ jobs:
     needs: update-package-managers
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         path: main-repo
     
@@ -643,13 +643,13 @@ jobs:
     needs: update-package-managers
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.SCOOP_BUCKET_TOKEN || secrets.GITHUB_TOKEN }}
         repository: Fguedes90/scoop-bucket
         path: scoop-bucket
     
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         path: main-repo
     
@@ -686,7 +686,7 @@ jobs:
     needs: update-package-managers
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup Snapcraft
       run: |

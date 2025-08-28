@@ -22,7 +22,7 @@ jobs:
     name: Code Quality (Format, Lint, Check)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup aggressive Rust cache
       uses: Swatinem/rust-cache@v2
@@ -88,7 +88,7 @@ jobs:
           --health-retries 2
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup super aggressive Rust cache
       uses: Swatinem/rust-cache@v2
@@ -133,7 +133,7 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup aggressive security cache
       uses: Swatinem/rust-cache@v2
@@ -173,7 +173,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup maximum build cache
       uses: Swatinem/rust-cache@v2

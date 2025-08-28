@@ -97,7 +97,7 @@ jobs:
         git config --local user.name "GitHub Action"
     
     - name: Install mise
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -191,7 +191,7 @@ jobs:
         fetch-depth: 0
     
     - name: Install mise
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -251,7 +251,7 @@ jobs:
         fetch-depth: 0
     
     - name: Install mise
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -318,7 +318,7 @@ jobs:
     - uses: actions/checkout@v5
     
     - name: Install mise
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true
@@ -371,14 +371,10 @@ jobs:
       uses: Swatinem/rust-cache@v2
       with:
         shared-key: "publish-crate"
-        cache-directories: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
+        cache-on-failure: true
     
     - name: Install mise
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v3
       with:
         install: true
         cache: true

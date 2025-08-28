@@ -16,6 +16,11 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: true
   # Use sparse registry for faster index updates
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  # Additional optimizations
+  CARGO_HTTP_MULTIPLEXING: false
+  CARGO_NET_OFFLINE: false
+  # Reduce memory usage in parallel builds
+  CARGO_BUILD_JOBS: 4
 
 jobs:
   # Detect what types of changes were made
@@ -61,6 +66,10 @@ jobs:
         # Let rust-cache handle standard directories automatically
         cache-on-failure: true
         save-if: ${{ github.ref == 'refs/heads/main' }}
+        # Include Cargo.lock in key for more precise caching
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        # Cache workspaces for better incremental builds
+        workspaces: "."
     
     - name: Install mise (cached)
       uses: jdx/mise-action@v3
@@ -69,6 +78,17 @@ jobs:
         cache: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Cache Rustup toolchain
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.rustup/settings.toml
+          ~/.rustup/toolchains
+          ~/.rustup/update-hashes
+        key: ${{ runner.os }}-rustup-${{ hashFiles('rust-toolchain.toml', 'rust-toolchain') }}
+        restore-keys: |
+          ${{ runner.os }}-rustup-
+
     - name: Install Rust components (cached)
       run: |
         rustup component add clippy rustfmt
@@ -128,6 +148,9 @@ jobs:
         # Cache all targets for comprehensive testing
         cache-targets: "true"
         cache-all-crates: "true"
+        # Include Cargo.lock in key for more precise caching
+        key: ${{ runner.os }}-test-${{ hashFiles('**/Cargo.lock') }}
+        workspaces: "."
     
     - name: Install mise (cached)
       uses: jdx/mise-action@v3
@@ -145,8 +168,8 @@ jobs:
     - name: Run tests with maximum optimization
       run: |
         echo "Running tests with cache optimization..."
-        # Use locked deps to avoid re-downloading
-        if ! cargo test --locked --release --jobs $(nproc); then
+        # Use locked deps and optimized flags for faster test execution
+        if ! cargo test --locked --release --jobs $(nproc) -- --test-threads $(nproc); then
           echo "❌ Tests failed"
           exit 1
         fi

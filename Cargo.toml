@@ -37,7 +37,7 @@ tokio = { version = "1.47", features = ["full"] }
 async-trait = "0.1"
 
 # Broker clients
-redis = { version = "0.24", features = ["tokio-comp"] }
+redis = { version = "0.32", features = ["tokio-comp"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

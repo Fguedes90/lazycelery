@@ -79,7 +79,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Cache Rustup toolchain
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.rustup/settings.toml
@@ -198,7 +198,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Cache cargo-audit binary
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cargo/bin/cargo-audit
         key: cargo-audit-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}

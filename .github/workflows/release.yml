@@ -493,7 +493,7 @@ jobs:
         echo "source_url=$SOURCE_URL" >> $GITHUB_OUTPUT
     
     - name: Cache checksums calculation
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       id: checksum-cache
       with:
         path: checksums-*.txt

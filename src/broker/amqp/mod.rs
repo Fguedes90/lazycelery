@@ -56,8 +56,9 @@ struct CeleryEvent {
 impl CeleryEvent {
     /// Parse a raw event JSON into a CeleryEvent
     fn parse(data: &[u8]) -> Result<Self, BrokerError> {
-        let json: Value =
-            serde_json::from_slice(data).map_err(|e| BrokerError::OperationError(format!("Failed to parse event JSON: {}", e)))?;
+        let json: Value = serde_json::from_slice(data).map_err(|e| {
+            BrokerError::OperationError(format!("Failed to parse event JSON: {}", e))
+        })?;
 
         let event_type = match json.get("type").and_then(|v| v.as_str()) {
             Some("worker-online") => CeleryEventType::WorkerOnline,
@@ -75,15 +76,33 @@ impl CeleryEvent {
             .and_then(|v| v.as_f64())
             .unwrap_or_else(|| Utc::now().timestamp_millis() as f64);
 
-        let hostname = json.get("hostname").and_then(|v| v.as_str()).map(String::from);
+        let hostname = json
+            .get("hostname")
+            .and_then(|v| v.as_str())
+            .map(String::from);
         let task_id = json.get("id").and_then(|v| v.as_str()).map(String::from);
         let task_name = json.get("name").and_then(|v| v.as_str()).map(String::from);
-        let result = json.get("result").and_then(|v| v.as_str()).map(String::from);
-        let traceback = json.get("traceback").and_then(|v| v.as_str()).map(String::from);
-        let exception = json.get("exception").and_then(|v| v.as_str()).map(String::from);
+        let result = json
+            .get("result")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let traceback = json
+            .get("traceback")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let exception = json
+            .get("exception")
+            .and_then(|v| v.as_str())
+            .map(String::from);
         let args = json.get("args").and_then(|v| v.as_str()).map(String::from);
-        let kwargs = json.get("kwargs").and_then(|v| v.as_str()).map(String::from);
-        let retries = json.get("retries").and_then(|v| v.as_u64()).map(|v| v as u32);
+        let kwargs = json
+            .get("kwargs")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let retries = json
+            .get("retries")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as u32);
 
         Ok(Self {
             event_type,
@@ -123,7 +142,10 @@ impl CeleryEvent {
     /// Convert to Task model
     fn to_task(&self) -> Option<Task> {
         let task_id = self.task_id.clone()?;
-        let task_name = self.task_name.clone().unwrap_or_else(|| "unknown".to_string());
+        let task_name = self
+            .task_name
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string());
 
         let status = match self.event_type {
             CeleryEventType::TaskReceived => TaskStatus::Pending,
@@ -141,7 +163,8 @@ impl CeleryEvent {
             kwargs: self.kwargs.clone().unwrap_or_else(|| "{}".to_string()),
             status,
             worker: self.hostname.clone(),
-            timestamp: DateTime::from_timestamp_millis(self.timestamp as i64).unwrap_or_else(Utc::now),
+            timestamp: DateTime::from_timestamp_millis(self.timestamp as i64)
+                .unwrap_or_else(Utc::now),
             result: self.result.clone(),
             traceback: self.traceback.clone(),
         })
@@ -187,7 +210,10 @@ pub struct AmqpBroker {
 impl AmqpBroker {
     /// Create a new AMQP broker
     pub async fn connect(url: &str) -> Result<Self, BrokerError> {
-        info!("Connecting to AMQP broker: {}", url.split('@').last().unwrap_or("hidden"));
+        info!(
+            "Connecting to AMQP broker: {}",
+            url.split('@').last().unwrap_or("hidden")
+        );
 
         let connection = Connection::connect(url, ConnectionProperties::default())
             .await
@@ -257,7 +283,13 @@ impl AmqpBroker {
 
         // Bind to the celeryev exchange
         channel
-            .queue_bind("celeryev", "celeryev", "*", QueueBindOptions::default(), FieldTable::default())
+            .queue_bind(
+                "celeryev",
+                "celeryev",
+                "*",
+                QueueBindOptions::default(),
+                FieldTable::default(),
+            )
             .await
             .map_err(|e| BrokerError::OperationError(format!("Failed to bind queue: {}", e)))?;
 
@@ -299,7 +331,10 @@ impl AmqpBroker {
                                 Some(worker) => {
                                     let mut workers_guard = workers.write().await;
                                     // Update or add worker
-                                    if let Some(existing) = workers_guard.iter_mut().find(|w| w.hostname == worker.hostname) {
+                                    if let Some(existing) = workers_guard
+                                        .iter_mut()
+                                        .find(|w| w.hostname == worker.hostname)
+                                    {
                                         *existing = worker;
                                     } else {
                                         workers_guard.push(worker);
@@ -312,11 +347,15 @@ impl AmqpBroker {
                                 Some(task) => {
                                     let mut tasks_guard = tasks.write().await;
                                     // Update or add task
-                                    if let Some(existing) = tasks_guard.iter_mut().find(|t| t.id == task.id) {
+                                    if let Some(existing) =
+                                        tasks_guard.iter_mut().find(|t| t.id == task.id)
+                                    {
                                         // Update existing task
                                         existing.status = task.status;
-                                        existing.result = task.result.clone().or(existing.result.clone());
-                                        existing.traceback = task.traceback.clone().or(existing.traceback.clone());
+                                        existing.result =
+                                            task.result.clone().or(existing.result.clone());
+                                        existing.traceback =
+                                            task.traceback.clone().or(existing.traceback.clone());
                                         if let Some(w) = task.worker {
                                             existing.worker = Some(w);
                                         }
@@ -345,25 +384,29 @@ impl AmqpBroker {
         // In AMQP/RabbitMQ, listing queues requires the management plugin
         // For basic implementation, we return common Celery queue patterns
         // The actual queues will be discovered when workers connect
-        
+
         let mut queues = vec!["celery".to_string()];
 
         // Try to declare common Celery queues passively to check existence
         // This is a workaround since queue_list() requires management plugin
         let celery_queues = ["celery", "celery@", "celeryd", "celeryd@"];
-        
+
         for queue_name in celery_queues {
-            match self.channel.queue_declare(
-                queue_name,
-                QueueDeclareOptions {
-                    passive: true,
-                    durable: true,
-                    exclusive: false,
-                    auto_delete: false,
-                    nowait: false,
-                },
-                FieldTable::default(),
-            ).await {
+            match self
+                .channel
+                .queue_declare(
+                    queue_name,
+                    QueueDeclareOptions {
+                        passive: true,
+                        durable: true,
+                        exclusive: false,
+                        auto_delete: false,
+                        nowait: false,
+                    },
+                    FieldTable::default(),
+                )
+                .await
+            {
                 Ok(_) => {
                     if !queues.contains(&queue_name.to_string()) {
                         queues.push(queue_name.to_string());
@@ -406,13 +449,17 @@ impl Broker for AmqpBroker {
             // Get queue info using passive declare
             match self
                 .channel
-                .queue_declare(&name, QueueDeclareOptions {
-                    passive: true,
-                    durable: true,
-                    exclusive: false,
-                    auto_delete: false,
-                    nowait: false,
-                }, FieldTable::default())
+                .queue_declare(
+                    &name,
+                    QueueDeclareOptions {
+                        passive: true,
+                        durable: true,
+                        exclusive: false,
+                        auto_delete: false,
+                        nowait: false,
+                    },
+                    FieldTable::default(),
+                )
                 .await
             {
                 Ok(declaration) => {
@@ -464,7 +511,10 @@ impl Broker for AmqpBroker {
             info!("Task {} requeued for retry", task_id);
             Ok(())
         } else {
-            Err(BrokerError::OperationError(format!("Task {} not found", task_id)))
+            Err(BrokerError::OperationError(format!(
+                "Task {} not found",
+                task_id
+            )))
         }
     }
 
@@ -497,13 +547,17 @@ impl Broker for AmqpBroker {
         // Purge a queue by redeclaring it with purge option
         let queue = self
             .channel
-            .queue_declare(queue_name, QueueDeclareOptions {
-                passive: false,
-                durable: true,
-                exclusive: false,
-                auto_delete: false,
-                nowait: false,
-            }, FieldTable::default())
+            .queue_declare(
+                queue_name,
+                QueueDeclareOptions {
+                    passive: false,
+                    durable: true,
+                    exclusive: false,
+                    auto_delete: false,
+                    nowait: false,
+                },
+                FieldTable::default(),
+            )
             .await
             .map_err(|e| BrokerError::OperationError(format!("Failed to declare queue: {}", e)))?;
 
@@ -512,17 +566,17 @@ impl Broker for AmqpBroker {
         // Purge messages by consuming them all
         if message_count > 0 {
             // Create a new channel for purging
-            let purge_channel = self
-                .connection
-                .create_channel()
-                .await
-                .map_err(|e| BrokerError::OperationError(format!("Failed to create channel: {}", e)))?;
+            let purge_channel = self.connection.create_channel().await.map_err(|e| {
+                BrokerError::OperationError(format!("Failed to create channel: {}", e))
+            })?;
 
             // Purge the queue - returns u32 directly
             let purged = purge_channel
                 .queue_purge(queue_name, QueuePurgeOptions::default())
                 .await
-                .map_err(|e| BrokerError::OperationError(format!("Failed to purge queue: {}", e)))?;
+                .map_err(|e| {
+                    BrokerError::OperationError(format!("Failed to purge queue: {}", e))
+                })?;
 
             info!("Purged {} messages from queue {}", purged, queue_name);
             Ok(purged as u64)

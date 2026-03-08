@@ -1,5 +1,5 @@
-pub mod result_backend;
 pub mod amqp;
+pub mod result_backend;
 
 pub mod redis;
 

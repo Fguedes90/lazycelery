@@ -71,10 +71,7 @@ fn parse_version(version: &str) -> Option<(u32, u32, u32)> {
 
     let major = parts[0].parse().ok()?;
     let minor = parts[1].parse().ok()?;
-    let patch = parts[2]
-        .split('-')
-        .next()
-        .and_then(|s| s.parse().ok())?;
+    let patch = parts[2].split('-').next().and_then(|s| s.parse().ok())?;
 
     Some((major, minor, patch))
 }

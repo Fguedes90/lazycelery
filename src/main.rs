@@ -4,8 +4,8 @@ mod config;
 mod error;
 mod models;
 mod ui;
-mod utils;
 mod update;
+mod utils;
 
 use anyhow::Result;
 use clap::Parser;
@@ -33,7 +33,7 @@ struct Cli {
 
     /// Broker URL (e.g., redis://localhost:6379/0)
     #[arg(short, long, global = true)]
-broker: Option<String>,
+    broker: Option<String>,
 
     /// Result backend URL
     #[arg(long, global = true)]
@@ -105,7 +105,7 @@ async fn run_tui_app(
         Config::from_file(config_path)?
     } else {
         Config::load_or_create_default()?
-};
+    };
 
     // Check for updates (non-blocking)
     let current_version = env!("CARGO_PKG_VERSION");
@@ -118,7 +118,6 @@ async fn run_tui_app(
     // Determine broker URL
     let broker_url = broker_arg.unwrap_or_else(|| config.broker.url.clone());
 
-
     // Connect to broker
     let broker: Box<dyn Broker> = match create_broker(&broker_url).await {
         Ok(broker) => broker,
@@ -128,7 +127,10 @@ async fn run_tui_app(
             } else if broker_url.starts_with("amqp://") {
                 ("RabbitMQ", "amqp://guest:guest@localhost:5672//")
             } else {
-                ("Unknown", "redis://localhost:6379/0 or amqp://localhost:5672//")
+                (
+                    "Unknown",
+                    "redis://localhost:6379/0 or amqp://localhost:5672//",
+                )
             };
             eprintln!("\n❌ Failed to connect to {broker_type} broker at {broker_url}");
             eprintln!("\n{e}");
@@ -414,4 +416,3 @@ async fn test_broker_connection(url: &str) -> Result<()> {
     create_broker(url).await?;
     Ok(())
 }
-

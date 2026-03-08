@@ -517,8 +517,7 @@ impl Broker for AmqpBroker {
             Ok(())
         } else {
             Err(BrokerError::OperationError(format!(
-                "Task {} not found",
-                task_id
+                "Task {task_id} not found"
             )))
         }
     }

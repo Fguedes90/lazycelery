@@ -38,6 +38,8 @@ async-trait = "0.1"
 
 # Broker clients
 redis = { version = "0.24", features = ["tokio-comp"] }
+lapin = "2.5"
+futures-lite = "2.0"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -60,6 +62,25 @@ anyhow = "1.0"
 
 # Logging
 tracing = "0.1"
+# HTTP client for update checking
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
 [dev-dependencies]
 tempfile = "3.8"
+
+
+# Cargo-dist configuration for packaging
+# See: https://cargo.distribution.axodotdev.cargo.cr/reference/config.html
+[package.metadata.cargo-dist]
+# Enable cargo-dist features
+ci = { github = { enable = true } }
+# Targets to build
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
+# Installers to generate
+installers = ["shell", "homebrew", "scoop"]
+# Homebrew formula settings
+homebrew = { enable = true }
+# Scoop settings
+scoop = { enable = true }
+# AUR settings
+aur = { enable = true }

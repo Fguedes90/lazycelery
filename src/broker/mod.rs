@@ -1,3 +1,6 @@
+pub mod result_backend;
+pub mod amqp;
+
 pub mod redis;
 
 use crate::error::BrokerError;
@@ -17,4 +20,15 @@ pub trait Broker: Send + Sync {
     async fn retry_task(&self, task_id: &str) -> Result<(), BrokerError>;
     async fn revoke_task(&self, task_id: &str) -> Result<(), BrokerError>;
     async fn purge_queue(&self, queue_name: &str) -> Result<u64, BrokerError>;
+}
+
+/// Create a broker based on the URL scheme
+pub async fn create_broker(url: &str) -> Result<Box<dyn Broker>, BrokerError> {
+    if url.starts_with("redis://") {
+        Ok(Box::new(redis::RedisBroker::connect(url).await?))
+    } else if url.starts_with("amqp://") || url.starts_with("rabbitmq://") {
+        Ok(Box::new(amqp::AmqpBroker::connect(url).await?))
+    } else {
+        Err(BrokerError::InvalidUrl(url.to_string()))
+    }
 }

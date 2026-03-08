@@ -5,6 +5,7 @@ mod error;
 mod models;
 mod ui;
 mod utils;
+mod update;
 
 use anyhow::Result;
 use clap::Parser;
@@ -18,7 +19,7 @@ use std::{io, time::Duration};
 use tokio::time;
 
 use crate::app::App;
-use crate::broker::{redis::RedisBroker, Broker};
+use crate::broker::{create_broker, Broker};
 use crate::config::Config;
 use crate::ui::events::{handle_key_event, next_event, AppEvent};
 
@@ -32,7 +33,11 @@ struct Cli {
 
     /// Broker URL (e.g., redis://localhost:6379/0)
     #[arg(short, long, global = true)]
-    broker: Option<String>,
+broker: Option<String>,
+
+    /// Result backend URL
+    #[arg(long, global = true)]
+    result_backend: Option<String>,
 
     /// Configuration file path
     #[arg(short, long, global = true)]
@@ -100,47 +105,46 @@ async fn run_tui_app(
         Config::from_file(config_path)?
     } else {
         Config::load_or_create_default()?
-    };
+};
+
+    // Check for updates (non-blocking)
+    let current_version = env!("CARGO_PKG_VERSION");
+    tokio::spawn(async move {
+        if let Some(update) = update::check_for_update(current_version).await {
+            update.print_notification();
+        }
+    });
 
     // Determine broker URL
     let broker_url = broker_arg.unwrap_or_else(|| config.broker.url.clone());
 
+
     // Connect to broker
-    let broker: Box<dyn Broker> = if broker_url.starts_with("redis://") {
-        match RedisBroker::connect(&broker_url).await {
-            Ok(broker) => Box::new(broker),
-            Err(e) => {
-                eprintln!("\n❌ Failed to connect to Celery broker at {broker_url}");
-                eprintln!("\n{e}");
-                eprintln!("\n📋 Quick Setup Guide:");
-                eprintln!("1. Make sure Redis is running:");
-                eprintln!("   - Docker: docker run -d -p 6379:6379 redis");
-                eprintln!("   - macOS: brew services start redis");
-                eprintln!("   - Linux: sudo systemctl start redis");
-                eprintln!("\n2. Verify Redis is accessible:");
-                eprintln!("   redis-cli ping");
-                eprintln!("\n3. Run lazycelery with your broker URL:");
-                eprintln!("   lazycelery --broker redis://localhost:6379/0");
-                eprintln!("\n4. Or create a config file at ~/.config/lazycelery/config.toml:");
-                eprintln!("   [broker]");
-                eprintln!("   url = \"redis://localhost:6379/0\"");
-                eprintln!("\n💡 For more help, visit: https://github.com/Fguedes90/lazycelery");
-                std::process::exit(1);
-            }
+    let broker: Box<dyn Broker> = match create_broker(&broker_url).await {
+        Ok(broker) => broker,
+        Err(e) => {
+            let (broker_type, url_hint) = if broker_url.starts_with("redis://") {
+                ("Redis", "redis://localhost:6379/0")
+            } else if broker_url.starts_with("amqp://") {
+                ("RabbitMQ", "amqp://guest:guest@localhost:5672//")
+            } else {
+                ("Unknown", "redis://localhost:6379/0 or amqp://localhost:5672//")
+            };
+            eprintln!("\n❌ Failed to connect to {broker_type} broker at {broker_url}");
+            eprintln!("\n{e}");
+            eprintln!("\n📋 Quick Setup Guide:");
+            eprintln!("1. For Redis:");
+            eprintln!("   - Docker: docker run -d -p 6379:6379 redis");
+            eprintln!("   - macOS: brew services start redis");
+            eprintln!("   - Verify: redis-cli ping");
+            eprintln!("\n2. For RabbitMQ:");
+            eprintln!("   - Docker: docker run -d -p 5672:5672 rabbitmq");
+            eprintln!("   - Verify: amqp://guest:guest@localhost:5672//");
+            eprintln!("\n3. Run lazycelery:");
+            eprintln!("   lazycelery --broker {}", url_hint);
+            eprintln!("\n💡 For more help: https://github.com/Fgudes90/lazycelery");
+            std::process::exit(1);
         }
-    } else if broker_url.starts_with("amqp://") {
-        eprintln!("\n⚠️  AMQP/RabbitMQ support is coming soon!");
-        eprintln!("\n📋 Currently supported brokers:");
-        eprintln!("   - Redis (redis://localhost:6379/0)");
-        eprintln!("\nFor updates, visit: https://github.com/Fguedes90/lazycelery");
-        std::process::exit(1);
-    } else {
-        eprintln!("\n❌ Unknown broker type: {broker_url}");
-        eprintln!("\n📋 Supported broker URLs:");
-        eprintln!("   - Redis: redis://localhost:6379/0");
-        eprintln!("   - RabbitMQ: amqp://guest:guest@localhost:5672// (coming soon)");
-        eprintln!("\nExample: lazycelery --broker redis://localhost:6379/0");
-        std::process::exit(1);
     };
 
     // Create app state
@@ -406,14 +410,8 @@ fn set_refresh_interval(interval: u64) -> Result<()> {
 
     Ok(())
 }
-
 async fn test_broker_connection(url: &str) -> Result<()> {
-    if url.starts_with("redis://") {
-        let _broker = RedisBroker::connect(url).await?;
-        Ok(())
-    } else {
-        Err(anyhow::anyhow!(
-            "Only Redis brokers are currently supported"
-        ))
-    }
+    create_broker(url).await?;
+    Ok(())
 }
+

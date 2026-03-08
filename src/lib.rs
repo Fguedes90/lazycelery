@@ -5,3 +5,4 @@ pub mod error;
 pub mod models;
 pub mod ui;
 pub mod utils;
+pub mod update;

@@ -155,9 +155,9 @@ run = "mise tasks"
 
 [tasks.validate-versions]
 description = "Validate version consistency across project files"
-run = "python3 scripts/validate-versions.py"
+run = "sh scripts/validate-versions.sh"
 
 [tasks.fix-versions]
 description = "Fix version inconsistencies automatically"
-run = "python3 scripts/validate-versions.py --fix"
+run = "cargo set-version --bump patch && sh scripts/validate-versions.sh"
 

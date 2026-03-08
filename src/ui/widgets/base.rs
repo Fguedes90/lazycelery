@@ -29,14 +29,14 @@ pub mod helpers {
     }
 
     /// Create a standard block with borders and title
-    pub fn titled_block(title: &str) -> Block {
+    pub fn titled_block(title: &str) -> Block<'_> {
         Block::default()
             .borders(Borders::ALL)
             .title(format!(" {title} "))
     }
 
     /// Create a standard "no data" message
-    pub fn no_data_message(item_type: &str) -> Paragraph {
+    pub fn no_data_message(item_type: &str) -> Paragraph<'_> {
         let message = format!("No {item_type} found");
         let title = format!("{item_type} Details");
         let block = Block::default()

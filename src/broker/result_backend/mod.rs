@@ -14,6 +14,7 @@ use crate::models::Task;
 /// Result backends store the results of tasks after they complete,
 /// including success results, failure tracebacks, and timing information.
 #[async_trait]
+#[allow(dead_code)]
 pub trait ResultBackend: Send + Sync {
     /// Get a task result by ID
     async fn get_task_result(&self, task_id: &str) -> Result<Option<Task>, BrokerError>;

@@ -10,6 +10,7 @@ pub struct ReleaseInfo {
     /// The tag name (e.g., "v0.7.2")
     pub tag_name: String,
     /// Release name
+    #[allow(dead_code)]
     pub name: Option<String>,
     /// URL to the release page
     pub html_url: String,

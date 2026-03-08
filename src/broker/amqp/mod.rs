@@ -39,6 +39,7 @@ enum CeleryEventType {
 
 /// Parsed Celery event
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CeleryEvent {
     event_type: CeleryEventType,
     timestamp: f64,
@@ -199,6 +200,7 @@ pub struct AmqpBroker {
     /// AMQP channel for operations
     channel: Channel,
     /// Broker URL
+    #[allow(dead_code)]
     url: String,
     /// Internal state
     state: AmqpState,
@@ -212,7 +214,7 @@ impl AmqpBroker {
     pub async fn connect(url: &str) -> Result<Self, BrokerError> {
         info!(
             "Connecting to AMQP broker: {}",
-            url.split('@').last().unwrap_or("hidden")
+            url.split('@').next_back().unwrap_or("hidden")
         );
 
         let connection = Connection::connect(url, ConnectionProperties::default())
@@ -266,7 +268,7 @@ impl AmqpBroker {
         })?;
 
         // Declare the celeryev queue
-        let queue = channel
+        let _queue = channel
             .queue_declare(
                 "celeryev",
                 QueueDeclareOptions {
@@ -327,6 +329,7 @@ impl AmqpBroker {
                     Ok(delivery) => {
                         let data = delivery.data.clone();
                         if let Ok(event) = CeleryEvent::parse(&data) {
+                            #[allow(clippy::single_match)]
                             match event.to_worker() {
                                 Some(worker) => {
                                     let mut workers_guard = workers.write().await;
@@ -343,6 +346,7 @@ impl AmqpBroker {
                                 None => {}
                             }
 
+                            #[allow(clippy::single_match)]
                             match event.to_task() {
                                 Some(task) => {
                                     let mut tasks_guard = tasks.write().await;
@@ -392,6 +396,7 @@ impl AmqpBroker {
         let celery_queues = ["celery", "celery@", "celeryd", "celeryd@"];
 
         for queue_name in celery_queues {
+            #[allow(clippy::single_match)]
             match self
                 .channel
                 .queue_declare(
@@ -447,6 +452,7 @@ impl Broker for AmqpBroker {
         let mut queues = Vec::new();
         for name in queue_names {
             // Get queue info using passive declare
+            #[allow(clippy::single_match)]
             match self
                 .channel
                 .queue_declare(
@@ -500,7 +506,7 @@ impl Broker for AmqpBroker {
                     "",
                     "celery",
                     BasicPublishOptions::default(),
-                    &payload.to_string().as_bytes(),
+                    payload.to_string().as_bytes(),
                     BasicProperties::default()
                         .with_content_type("application/json".into())
                         .with_correlation_id(task_id.into()),
@@ -531,7 +537,7 @@ impl Broker for AmqpBroker {
                 "celery",
                 "celeryctl",
                 BasicPublishOptions::default(),
-                &revoke_msg.to_string().as_bytes(),
+                revoke_msg.to_string().as_bytes(),
                 BasicProperties::default()
                     .with_content_type("application/json".into())
                     .with_correlation_id(task_id.into()),

@@ -108,7 +108,7 @@ pub fn draw_task_details_modal(f: &mut Frame, app: &App) {
 }
 
 /// Build the content lines for task details modal
-fn build_task_details_content(task: &crate::models::Task) -> Vec<Line> {
+fn build_task_details_content(task: &crate::models::Task) -> Vec<Line<'_>> {
     let mut details_lines = vec![
         Line::from(vec![
             Span::styled(

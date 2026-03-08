@@ -143,7 +143,7 @@ async fn run_tui_app(
             eprintln!("   - Docker: docker run -d -p 5672:5672 rabbitmq");
             eprintln!("   - Verify: amqp://guest:guest@localhost:5672//");
             eprintln!("\n3. Run lazycelery:");
-            eprintln!("   lazycelery --broker {}", url_hint);
+            eprintln!("   lazycelery --broker {url_hint}");
             eprintln!("\n💡 For more help: https://github.com/Fgudes90/lazycelery");
             std::process::exit(1);
         }

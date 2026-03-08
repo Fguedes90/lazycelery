@@ -57,9 +57,8 @@ struct CeleryEvent {
 impl CeleryEvent {
     /// Parse a raw event JSON into a CeleryEvent
     fn parse(data: &[u8]) -> Result<Self, BrokerError> {
-        let json: Value = serde_json::from_slice(data).map_err(|e| {
-            BrokerError::OperationError(format!("Failed to parse event JSON: {e}"))
-        })?;
+        let json: Value = serde_json::from_slice(data)
+            .map_err(|e| BrokerError::OperationError(format!("Failed to parse event JSON: {e}")))?;
 
         let event_type = match json.get("type").and_then(|v| v.as_str()) {
             Some("worker-online") => CeleryEventType::WorkerOnline,
@@ -580,9 +579,7 @@ impl Broker for AmqpBroker {
             let purged = purge_channel
                 .queue_purge(queue_name, QueuePurgeOptions::default())
                 .await
-                .map_err(|e| {
-                    BrokerError::OperationError(format!("Failed to purge queue: {e}"))
-                })?;
+                .map_err(|e| BrokerError::OperationError(format!("Failed to purge queue: {e}")))?;
 
             info!("Purged {} messages from queue {}", purged, queue_name);
             Ok(purged as u64)

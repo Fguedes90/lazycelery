@@ -58,7 +58,7 @@ impl CeleryEvent {
     /// Parse a raw event JSON into a CeleryEvent
     fn parse(data: &[u8]) -> Result<Self, BrokerError> {
         let json: Value = serde_json::from_slice(data).map_err(|e| {
-            BrokerError::OperationError(format!("Failed to parse event JSON: {}", e))
+            BrokerError::OperationError(format!("Failed to parse event JSON: {e}"))
         })?;
 
         let event_type = match json.get("type").and_then(|v| v.as_str()) {
@@ -221,13 +221,13 @@ impl AmqpBroker {
             .await
             .map_err(|e| {
                 error!("Failed to connect to AMQP: {}", e);
-                BrokerError::ConnectionError(format!("AMQP connection failed: {}", e))
+                BrokerError::ConnectionError(format!("AMQP connection failed: {e}"))
             })?;
 
         let channel = connection
             .create_channel()
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to create channel: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to create channel: {e}")))?;
 
         // Declare the celeryev exchange if it doesn't exist
         let _ = channel
@@ -264,7 +264,7 @@ impl AmqpBroker {
     /// Start consuming Celery events in the background
     async fn start_event_consumer(&self) -> Result<(), BrokerError> {
         let channel = self.connection.create_channel().await.map_err(|e| {
-            BrokerError::OperationError(format!("Failed to create event channel: {}", e))
+            BrokerError::OperationError(format!("Failed to create event channel: {e}"))
         })?;
 
         // Declare the celeryev queue
@@ -281,7 +281,7 @@ impl AmqpBroker {
                 FieldTable::default(),
             )
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to declare queue: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to declare queue: {e}")))?;
 
         // Bind to the celeryev exchange
         channel
@@ -293,7 +293,7 @@ impl AmqpBroker {
                 FieldTable::default(),
             )
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to bind queue: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to bind queue: {e}")))?;
 
         // Create consumer
         let mut consumer = channel
@@ -309,7 +309,7 @@ impl AmqpBroker {
                 FieldTable::default(),
             )
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to start consumer: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to start consumer: {e}")))?;
 
         let workers = self.state.workers.clone();
         let tasks = self.state.tasks.clone();
@@ -512,7 +512,7 @@ impl Broker for AmqpBroker {
                         .with_correlation_id(task_id.into()),
                 )
                 .await
-                .map_err(|e| BrokerError::OperationError(format!("Failed to retry task: {}", e)))?;
+                .map_err(|e| BrokerError::OperationError(format!("Failed to retry task: {e}")))?;
 
             info!("Task {} requeued for retry", task_id);
             Ok(())
@@ -543,7 +543,7 @@ impl Broker for AmqpBroker {
                     .with_correlation_id(task_id.into()),
             )
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to revoke task: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to revoke task: {e}")))?;
 
         info!("Task {} revoked", task_id);
         Ok(())
@@ -565,7 +565,7 @@ impl Broker for AmqpBroker {
                 FieldTable::default(),
             )
             .await
-            .map_err(|e| BrokerError::OperationError(format!("Failed to declare queue: {}", e)))?;
+            .map_err(|e| BrokerError::OperationError(format!("Failed to declare queue: {e}")))?;
 
         let message_count = queue.message_count();
 
@@ -573,7 +573,7 @@ impl Broker for AmqpBroker {
         if message_count > 0 {
             // Create a new channel for purging
             let purge_channel = self.connection.create_channel().await.map_err(|e| {
-                BrokerError::OperationError(format!("Failed to create channel: {}", e))
+                BrokerError::OperationError(format!("Failed to create channel: {e}"))
             })?;
 
             // Purge the queue - returns u32 directly
@@ -581,7 +581,7 @@ impl Broker for AmqpBroker {
                 .queue_purge(queue_name, QueuePurgeOptions::default())
                 .await
                 .map_err(|e| {
-                    BrokerError::OperationError(format!("Failed to purge queue: {}", e))
+                    BrokerError::OperationError(format!("Failed to purge queue: {e}"))
                 })?;
 
             info!("Purged {} messages from queue {}", purged, queue_name);

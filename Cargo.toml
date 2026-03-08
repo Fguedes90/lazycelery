@@ -75,7 +75,7 @@ tempfile = "3.8"
 # Enable cargo-dist features
 ci = { github = { enable = true } }
 # Targets to build
-targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
 # Installers to generate
 installers = ["shell", "homebrew", "scoop"]
 # Homebrew formula settings

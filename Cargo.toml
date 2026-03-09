@@ -38,7 +38,7 @@ async-trait = "0.1"
 
 # Broker clients
 redis = { version = "0.25", features = ["tokio-comp"] }
-lapin = "2.5"
+lapin = "4.2"
 futures-lite = "2.0"
 
 # Serialization

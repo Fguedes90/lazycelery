@@ -97,7 +97,7 @@ jobs:
         git config --local user.name "GitHub Action"
     
     - name: Install mise
-      uses: jdx/mise-action@v3
+      uses: jdx/mise-action@v4
       with:
         install: true
         cache: true
@@ -191,7 +191,7 @@ jobs:
         fetch-depth: 0
     
     - name: Install mise
-      uses: jdx/mise-action@v3
+      uses: jdx/mise-action@v4
       with:
         install: true
         cache: true
@@ -251,7 +251,7 @@ jobs:
         fetch-depth: 0
     
     - name: Install mise
-      uses: jdx/mise-action@v3
+      uses: jdx/mise-action@v4
       with:
         install: true
         cache: true
@@ -318,7 +318,7 @@ jobs:
     - uses: actions/checkout@v5
     
     - name: Install mise
-      uses: jdx/mise-action@v3
+      uses: jdx/mise-action@v4
       with:
         install: true
         cache: true
@@ -384,7 +384,7 @@ jobs:
         workspaces: "."
     
     - name: Install mise
-      uses: jdx/mise-action@v3
+      uses: jdx/mise-action@v4
       with:
         install: true
         cache: true

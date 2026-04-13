@@ -122,7 +122,7 @@ jobs:
           done > checksums.txt
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.prepare.outputs.version }}
           name: LazyCelery v${{ steps.prepare.outputs.version }}

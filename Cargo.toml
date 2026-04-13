@@ -33,7 +33,7 @@ ratatui = "0.30"
 crossterm = "0.27"
 
 # Async runtime
-tokio = { version = "1.47", features = ["full"] }
+tokio = { version = "1.51", features = ["full"] }
 async-trait = "0.1"
 
 # Broker clients
